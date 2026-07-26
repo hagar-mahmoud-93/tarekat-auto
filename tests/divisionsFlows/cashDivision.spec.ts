@@ -8,6 +8,7 @@ import { openDivisionDashboard } from '../../steps/open-division-dashboard';
 import { InheritanceActionsPage } from '../../pages/inheritance-actions.page';
 import { TarikaFundsStatusClient } from '../../api/clients/tarika-funds-status.client';
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
+import { DivisionDashboardPage } from '../../pages/division-dashboard.page';
 
 test.describe('Inheritance seeder', () => {
 
@@ -73,6 +74,10 @@ test.describe('Inheritance seeder', () => {
 
     await test.step('Simulate Tarika funds transfer status', () =>
       new TarikaFundsStatusClient(request).simulate(result, divisionId),
+    );
+
+    await test.step('Complete heir inquiries', () =>
+      new DivisionDashboardPage(adminPage).completeHeirInqs(divisionId),
     );
 
   });
