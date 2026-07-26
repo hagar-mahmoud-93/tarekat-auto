@@ -5,6 +5,7 @@ import { DataPreparation } from '../../steps/data-preparation';
 import { DivisionsList } from '../../steps/divisions-list';
 import { HeirAcceptance } from '../../steps/heir-acceptance';
 import { openDivisionDashboard } from '../../steps/open-division-dashboard';
+import { InheritanceActionsPage } from '../../pages/inheritance-actions.page';
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 
 test.describe('Inheritance seeder', () => {
@@ -63,6 +64,10 @@ test.describe('Inheritance seeder', () => {
     await adminPage.bringToFront();
     await test.step('Open the division dashboard in admin', () =>
       openDivisionDashboard(adminPage, result.inheritanceId),
+    );
+
+    await test.step('Submit auditor approval in admin', () =>
+      new InheritanceActionsPage(adminPage).submitAuditorApprove(result.inheritanceId),
     );
 
     //await beneficiaryTab.close();
