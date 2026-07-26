@@ -7,12 +7,20 @@ export class DivisionDashboardPage extends BasePage {
     super(page);
   }
 
-  private heirRows() {
-    return this.page.locator('table tr').filter({ has: this.page.locator('button', { hasText: '+ Mock' }) });
+  private heirInquiryRows() {
+    return this.page.locator('table tr').filter({ has: this.page.locator('select[name^="response_"]') });
   }
 
-  private addMockAccountButton(row: ReturnType<Page['locator']>) {
-    return row.locator('button', { hasText: '+ Mock' });
+  private responseSelect(row: ReturnType<Page['locator']>) {
+    return row.locator('select[name^="response_"]');
+  }
+
+  private heirInquiriesTable() {
+    return this.page.locator('h2', { hasText: 'Heir Inquiries' }).locator('xpath=following::table[1]');
+  }
+
+  heirInquiryFsmState(rowIndex: number) {
+    return this.heirInquiriesTable().locator('tbody tr').nth(rowIndex).locator('td').nth(4);
   }
 
   private submitInquiryResponseButton() {
@@ -24,6 +32,7 @@ export class DivisionDashboardPage extends BasePage {
   }
 
   async expireAccountChoosing(): Promise<void> {
+    this.page.once('dialog', (dialog) => dialog.accept());
     await this.expireAccountChoosingButton().click();
     await this.page.waitForLoadState('networkidle').catch(() => { });
   }
@@ -32,26 +41,12 @@ export class DivisionDashboardPage extends BasePage {
     await this.page.goto(`${env.admin.apiURL}/division_v2/division/${divisionId}/dashboard/`);
     await this.page.waitForLoadState('networkidle').catch(() => { });
 
-    const rows = this.heirRows();
+    const rows = this.heirInquiryRows();
 
-    const firstRow = rows.nth(0);
-    for (let i = 0; i < firstHeirAccounts; i++) {
-      await this.addMockAccountButton(firstRow).click();
-      await this.page.waitForLoadState('networkidle').catch(() => { });
-      await this.page.waitForTimeout(1000);
-    }
+    await this.responseSelect(rows.nth(0)).selectOption({ value: `${firstHeirAccounts}_valid` });
+    await this.responseSelect(rows.nth(1)).selectOption({ value: `${secondHeirAccounts}_valid` });
 
-    await this.page.waitForTimeout(1000);
-
-    const secondRow = rows.nth(1);
-    for (let i = 0; i < secondHeirAccounts; i++) {
-      await this.page.waitForTimeout(1000);
-      await this.addMockAccountButton(secondRow).click();
-      await this.page.waitForLoadState('networkidle').catch(() => { });
-      await this.page.waitForTimeout(1000);
-    }
-
-    await this.page.waitForTimeout(1000);
+    this.page.once('dialog', (dialog) => dialog.accept());
     await this.submitInquiryResponseButton().click();
     await this.page.waitForLoadState('networkidle').catch(() => { });
   }

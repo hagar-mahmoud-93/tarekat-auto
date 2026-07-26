@@ -76,12 +76,16 @@ test.describe('Inheritance seeder', () => {
       new TarikaFundsStatusClient(request).simulate(result, divisionId),
     );
 
+    const divisionDashboardPage = new DivisionDashboardPage(adminPage);
     await test.step('Complete heir inquiries', () =>
-      new DivisionDashboardPage(adminPage).completeHeirInqs(divisionId),
+      divisionDashboardPage.completeHeirInqs(divisionId),
     );
 
+    await expect(divisionDashboardPage.heirInquiryFsmState(0)).not.toContainText('requested');
+    await expect(divisionDashboardPage.heirInquiryFsmState(1)).not.toContainText('requested');
+
     await test.step('Expire account choosing', () =>
-      new DivisionDashboardPage(adminPage).expireAccountChoosing(),
+      divisionDashboardPage.expireAccountChoosing(),
     );
 
   });
