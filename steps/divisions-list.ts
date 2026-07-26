@@ -22,7 +22,7 @@ export class DivisionsList {
     await expect(this.beneficiaryTab.getByText('تفاصيل الطلب')).toBeVisible();
     await expect(this.beneficiaryTab.getByText(this.result.json.request.requestNumber)).toBeVisible();
 
-    await requestsPage.openDivisionsListingPage();
+    await requestsPage.openDivisionsListingTab();
 
     return requestsPage;
   }

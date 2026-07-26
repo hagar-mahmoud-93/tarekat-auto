@@ -25,8 +25,13 @@ export class RequestsPage extends BasePage {
     await this.page.waitForLoadState('networkidle').catch(() => {});
   }
 
-  async openDivisionsListingPage() {
+  async openDivisionsListingTab() {
     await this.locators.divisionsTabsContainer().getByText('قسمة التركة').click();
+    await this.page.waitForLoadState('networkidle').catch(() => {});
+  }
+
+  async openRequestDataTab() {
+    await this.locators.requestDataTab().click();
     await this.page.waitForLoadState('networkidle').catch(() => {});
   }
 }

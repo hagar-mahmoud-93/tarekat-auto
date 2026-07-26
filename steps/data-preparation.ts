@@ -3,6 +3,7 @@ import { expect } from '../fixtures/base.fixture';
 import { env } from '../config/env';
 import { SeederPage, SeedResult } from '../pages/seeder.page';
 import { TawtheeqClient } from '../api/clients/tawtheeq.client';
+import { fillMobileNumberIfPrompted } from './fill-mobile-number';
 
 export type SeededCase = {
   result: SeedResult;
@@ -26,7 +27,6 @@ export class DataPreparation {
     expect(tawtheeqResponse.ok()).toBeTruthy();
 
     const beneficiaryTab = await this.seederPage.loginAsBeneficiary(result);
-
     return { result, beneficiaryTab };
   }
 }

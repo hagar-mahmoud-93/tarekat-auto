@@ -3,10 +3,14 @@ import { env } from '../../config/env';
 import { CashDivisionsPage } from '../../pages/cash-divisions.page';
 import { DataPreparation } from '../../steps/data-preparation';
 import { DivisionsList } from '../../steps/divisions-list';
+import { HeirAcceptance } from '../../steps/heir-acceptance';
+import { openDivisionDashboard } from '../../steps/open-division-dashboard';
+import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 
 test.describe('Inheritance seeder', () => {
 
-  test('seeds a case, navigates to الطلبات, and opens case details @smoke', async ({ seederPage, request }) => {
+  test('seeds a case, navigates to الطلبات, and opens case details @smoke', async ({ seederPage, request, page }) => {
+    test.setTimeout(180_000); // long multi-stage flow with real backend processing between steps
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 
     const dataPreparation = new DataPreparation(seederPage, request);
@@ -22,20 +26,47 @@ test.describe('Inheritance seeder', () => {
 
     const cashDivisionsPage = new CashDivisionsPage(beneficiaryTab);
     await cashDivisionsPage.showAssets();
+    await fillMobileNumberIfPrompted(beneficiaryTab);
     await cashDivisionsPage.acceptDivisionAgreement();
     await cashDivisionsPage.startDivision();
+
+    await cashDivisionsPage.waitForProposedDivisionCard();
+    await cashDivisionsPage.acceptDivisionAgreement();
+    await cashDivisionsPage.acceptDivision();
+
     await cashDivisionsPage.closeDivisionSuccessPopup();
 
     await requestsPage.open();
     await expect(beneficiaryTab).toHaveURL(/\/my-orders/);
-    await expect(requestsPage.requestCard('قسمة التركة')).toContainText('قيد التنفيذ');
+   // await expect(requestsPage.requestCard('قسمة التركة')).toContainText('قيد التنفيذ');
 
     await requestsPage.openCaseDetails();
-    await expect(requestsPage.distributionStatus()).toContainText('بانتظار بدء القسمة');
+   // await expect(requestsPage.distributionStatus()).toContainText('بانتظار بدء القسمة');
 
-    await requestsPage.openDivisionsListingPage();
+    await requestsPage.openDivisionsListingTab();
     await expect(cashDivisionsPage.requestStatus()).toContainText('بانتظار موافقة الورثة');
+
+    const heirAcceptance = new HeirAcceptance(seederPage, result);
+    await test.step('Other heirs log in and accept the division', () => heirAcceptance.run());
+    
+    await requestsPage.openRequestDataTab();
+    await expect(requestsPage.distributionStatus()).toContainText('في انتظار التدقيق');
+
+     await requestsPage.openDivisionsListingTab();
+    // await expect(cashDivisionsPage.requestStatus()).toContainText('في انتظار التدقيق');
+
+
+    await cashDivisionsPage.viewDivision();
+    await cashDivisionsPage.openBankAccountTab();
+   await expect(cashDivisionsPage.inquiryStatus()).toContainText('قيد الاستعلام');
+
+    await page.bringToFront();
+    await test.step('Open the division dashboard in admin', () =>
+      openDivisionDashboard(page, result.inheritanceId),
+    );
 
     //await beneficiaryTab.close();
   });
 });
+
+

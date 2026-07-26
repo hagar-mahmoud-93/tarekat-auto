@@ -19,6 +19,9 @@ export const env = {
   inheritanceSeeder: {
     apiURL: process.env.InheritanceSeeder_API_URL ?? '/inheritance_seeder/inheritanceseeder/seed/',
   },
+  divisionAdmin: {
+    apiURL: process.env.DIVISION_ADMIN_API_URL ?? '/division_v2/division/',
+  },
   tawtheeq: {
     baseURL: process.env.TAWTHEEQ_BASE_URL ?? 'https://preprod-mocks.azm-dev.com',
     accessToken: process.env.TAWTHEEQ_ACCESS_TOKEN ?? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg0NDQ2NDAwLCJpYXQiOjE3ODQ0NDU1MDAsImp0aSI6ImVkZTUxM2EwNDg2MzRkNTNiODk4MzM2OWRkZDAwYjY4IiwidXNlcl9pZCI6IjExMDgifQ.gPLGTr52eJUwdeAb09t3LSA9DiBBy1o8-e5rDUvlpoU',

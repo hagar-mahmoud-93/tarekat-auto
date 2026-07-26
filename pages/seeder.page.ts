@@ -7,7 +7,7 @@ export type SeedCaseJson = {
   _name: string;
   deceased: Record<string, unknown>;
   beneficiary: { identityNumber: string; fullName: string; [key: string]: unknown };
-  heirs: Array<Record<string, unknown>>;
+  heirs: Array<{ identityNumber: string; fullName: string; [key: string]: unknown }>;
   request: { id: number; requestNumber: string };
   estateAssets: Record<string, unknown>;
 };
@@ -68,8 +68,8 @@ export class SeederPage extends BasePage {
     return { inheritanceId, heirsCount, authUserIds, json: JSON.parse(json) };
   }
 
-  async loginAsBeneficiary(result: SeedResult): Promise<Page> {
-    const row = this.locators.beneficiaryRow(result.json.beneficiary.identityNumber);
+  async loginAsUser(identityNumber: string): Promise<Page> {
+    const row = this.locators.beneficiaryRow(identityNumber);
     const loginLink = this.locators.loginAsUserLink(row);
 
     const [popup] = await Promise.all([
@@ -78,5 +78,9 @@ export class SeederPage extends BasePage {
     ]);
     await popup.waitForLoadState('networkidle').catch(() => {});
     return popup;
+  }
+
+  async loginAsBeneficiary(result: SeedResult): Promise<Page> {
+    return this.loginAsUser(result.json.beneficiary.identityNumber);
   }
 }

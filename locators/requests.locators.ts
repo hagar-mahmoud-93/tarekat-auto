@@ -27,4 +27,8 @@ export class RequestsLocators {
   divisionsTabsContainer() {
     return this.page.locator('//*[@id="app"]/div/div/div[3]/div/div[2]/div/div[1]/div[3]/div');
   }
+
+  requestDataTab() {
+    return this.divisionsTabsContainer().getByText('بيانات الطلب');
+  }
 }
