@@ -9,7 +9,7 @@ import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 
 test.describe('Inheritance seeder', () => {
 
-  test('seeds a case, navigates to الطلبات, and opens case details @smoke', async ({ seederPage, request, page }) => {
+  test('seeds a case, navigates to الطلبات, and opens case details @smoke', async ({ seederPage, request, page: adminPage }) => {
     test.setTimeout(180_000); // long multi-stage flow with real backend processing between steps
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 
@@ -60,9 +60,9 @@ test.describe('Inheritance seeder', () => {
     await cashDivisionsPage.openBankAccountTab();
    await expect(cashDivisionsPage.inquiryStatus()).toContainText('قيد الاستعلام');
 
-    await page.bringToFront();
+    await adminPage.bringToFront();
     await test.step('Open the division dashboard in admin', () =>
-      openDivisionDashboard(page, result.inheritanceId),
+      openDivisionDashboard(adminPage, result.inheritanceId),
     );
 
     //await beneficiaryTab.close();
