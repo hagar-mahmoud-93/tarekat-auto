@@ -6,6 +6,7 @@ import { DivisionsList } from '../../steps/divisions-list';
 import { HeirAcceptance } from '../../steps/heir-acceptance';
 import { openDivisionDashboard } from '../../steps/open-division-dashboard';
 import { InheritanceActionsPage } from '../../pages/inheritance-actions.page';
+import { TarikaFundsStatusClient } from '../../api/clients/tarika-funds-status.client';
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 
 test.describe('Inheritance seeder', () => {
@@ -39,30 +40,30 @@ test.describe('Inheritance seeder', () => {
 
     await requestsPage.open();
     await expect(beneficiaryTab).toHaveURL(/\/my-orders/);
-   // await expect(requestsPage.requestCard('قسمة التركة')).toContainText('قيد التنفيذ');
+    // await expect(requestsPage.requestCard('قسمة التركة')).toContainText('قيد التنفيذ');
 
     await requestsPage.openCaseDetails();
-   // await expect(requestsPage.distributionStatus()).toContainText('بانتظار بدء القسمة');
+    // await expect(requestsPage.distributionStatus()).toContainText('بانتظار بدء القسمة');
 
     await requestsPage.openDivisionsListingTab();
     await expect(cashDivisionsPage.requestStatus()).toContainText('بانتظار موافقة الورثة');
 
     const heirAcceptance = new HeirAcceptance(seederPage, result);
     await test.step('Other heirs log in and accept the division', () => heirAcceptance.run());
-    
+
     await requestsPage.openRequestDataTab();
     await expect(requestsPage.distributionStatus()).toContainText('في انتظار التدقيق');
 
-     await requestsPage.openDivisionsListingTab();
+    await requestsPage.openDivisionsListingTab();
     // await expect(cashDivisionsPage.requestStatus()).toContainText('في انتظار التدقيق');
 
 
     await cashDivisionsPage.viewDivision();
     await cashDivisionsPage.openBankAccountTab();
-   await expect(cashDivisionsPage.inquiryStatus()).toContainText('قيد الاستعلام');
-
+    await expect(cashDivisionsPage.inquiryStatus()).toContainText('قيد الاستعلام');
+    // 
     await adminPage.bringToFront();
-    await test.step('Open the division dashboard in admin', () =>
+    const divisionId = await test.step('Open the division dashboard in admin', () =>
       openDivisionDashboard(adminPage, result.inheritanceId),
     );
 
@@ -70,7 +71,10 @@ test.describe('Inheritance seeder', () => {
       new InheritanceActionsPage(adminPage).submitAuditorApprove(result.inheritanceId),
     );
 
-    //await beneficiaryTab.close();
+    await test.step('Simulate Tarika funds transfer status', () =>
+      new TarikaFundsStatusClient(request).simulate(result, divisionId),
+    );
+
   });
 });
 

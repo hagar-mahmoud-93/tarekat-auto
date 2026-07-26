@@ -3,13 +3,23 @@ import { BasePage } from './base.page';
 import { env } from '../config/env';
 import { SeederLocators } from '../locators/seeder.locators';
 
+export type AssetAccount = {
+  iban: string;
+  accountNumber: string;
+  balance: string;
+};
+
 export type SeedCaseJson = {
   _name: string;
-  deceased: Record<string, unknown>;
+  deceased: { identityNumber: string; [key: string]: unknown };
   beneficiary: { identityNumber: string; fullName: string; [key: string]: unknown };
   heirs: Array<{ identityNumber: string; fullName: string; [key: string]: unknown }>;
   request: { id: number; requestNumber: string };
-  estateAssets: Record<string, unknown>;
+  estateAssets: {
+    bankAccounts?: AssetAccount[];
+    investmentAccounts?: AssetAccount[];
+    [key: string]: unknown;
+  };
 };
 
 export type SeedResult = {
@@ -30,6 +40,10 @@ export class SeederPage extends BasePage {
   }
 
   async generateRandomData() {
+    await this.page.evaluate(() => {
+      const cb = document.getElementById('gen_include_investment') as HTMLInputElement;
+      if (cb?.checked) cb.click();
+    });
     await this.locators.generateRandomDataButton().click();
     // The fill is async client-side JS; give it time to populate before submitting.
     await this.page.waitForTimeout(1500);

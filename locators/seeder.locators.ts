@@ -19,6 +19,10 @@ export class SeederLocators {
     return this.page.getByRole('button', { name: 'Generate Random Data' });
   }
 
+  includeInvestmentCheckbox() {
+    return this.page.locator('#gen_include_investment');
+  }
+
   seedCaseSubmit() {
     return this.page.locator('input[type=submit][value="Seed Case"]');
   }

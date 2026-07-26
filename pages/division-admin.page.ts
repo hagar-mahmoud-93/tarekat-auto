@@ -16,8 +16,11 @@ export class DivisionAdminPage extends BasePage {
     await this.page.waitForLoadState('networkidle').catch(() => {});
   }
 
-  async openDashboard() {
+  async openDashboard(): Promise<string> {
     await this.locators.dashboardLink().first().click();
     await this.page.waitForLoadState('networkidle').catch(() => {});
+    const match = this.page.url().match(/\/([0-9a-f-]{36})\//);
+    if (!match) throw new Error(`Could not extract division ID from URL: ${this.page.url()}`);
+    return match[1];
   }
 }
