@@ -15,7 +15,6 @@ export type SeedCaseJson = {
 export type SeedResult = {
   inheritanceId: string;
   heirsCount: number;
-  authUserIds: number[];
   json: SeedCaseJson;
 };
 
@@ -48,10 +47,6 @@ export class SeederPage extends BasePage {
 
     const inheritanceId = successLine.match(/Inheritance ID: ([\w-]+)/)?.[1] ?? '';
     const heirsCount = Number(successLine.match(/Heirs: (\d+)/)?.[1] ?? 0);
-    const authUserIds = (successLine.match(/Auth User IDs: \[([^\]]*)\]/)?.[1] ?? '')
-      .split(',')
-      .map((id) => Number(id.trim()))
-      .filter((id) => !Number.isNaN(id));
 
     const json = await this.page.evaluate(() => {
       const blocks = Array.from(document.querySelectorAll('pre, code'));
@@ -65,7 +60,7 @@ export class SeederPage extends BasePage {
       throw new Error('Could not extract seed case JSON from the page');
     }
 
-    return { inheritanceId, heirsCount, authUserIds, json: JSON.parse(json) };
+    return { inheritanceId, heirsCount, json: JSON.parse(json) };
   }
 
   async loginAsUser(identityNumber: string): Promise<Page> {
