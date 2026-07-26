@@ -80,6 +80,10 @@ test.describe('Inheritance seeder', () => {
       new DivisionDashboardPage(adminPage).completeHeirInqs(divisionId),
     );
 
+    await test.step('Expire account choosing', () =>
+      new DivisionDashboardPage(adminPage).expireAccountChoosing(),
+    );
+
   });
 });
 

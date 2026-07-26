@@ -19,6 +19,15 @@ export class DivisionDashboardPage extends BasePage {
     return this.page.locator('button', { hasText: /submit inquiry response/i });
   }
 
+  private expireAccountChoosingButton() {
+    return this.page.locator('button', { hasText: /expire account choosing/i });
+  }
+
+  async expireAccountChoosing(): Promise<void> {
+    await this.expireAccountChoosingButton().click();
+    await this.page.waitForLoadState('networkidle').catch(() => { });
+  }
+
   async completeHeirInqs(divisionId: string, firstHeirAccounts = 1, secondHeirAccounts = 3): Promise<void> {
     await this.page.goto(`${env.admin.apiURL}/division_v2/division/${divisionId}/dashboard/`);
     await this.page.waitForLoadState('networkidle').catch(() => { });
