@@ -104,5 +104,9 @@ test.describe('Inheritance seeder', () => {
       );
     });
 
+    await test.step('Complete all instructions', () =>
+      divisionDashboardPage.completeAllInstructions(),
+    );
+
   });
 });

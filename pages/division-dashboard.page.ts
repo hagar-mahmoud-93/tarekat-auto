@@ -41,6 +41,16 @@ export class DivisionDashboardPage extends BasePage {
     await this.page.waitForLoadState('networkidle').catch(() => { });
   }
 
+  private completeAllInstructionsButton() {
+    return this.page.locator('button', { hasText: /complete all instructions/i });
+  }
+
+  async completeAllInstructions(): Promise<void> {
+    this.page.once('dialog', (dialog) => dialog.accept());
+    await this.completeAllInstructionsButton().click();
+    await this.page.waitForLoadState('networkidle').catch(() => { });
+  }
+
   async completeHeirInqs(divisionId: string, heirsCount: number): Promise<void> {
     await this.page.goto(`${env.admin.apiURL}/division_v2/division/${divisionId}/dashboard/`);
     await this.page.waitForLoadState('networkidle').catch(() => { });
