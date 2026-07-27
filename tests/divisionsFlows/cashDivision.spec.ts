@@ -19,15 +19,10 @@ test.describe('Inheritance seeder', () => {
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 
     const dataPreparation = new DataPreparation(seederPage, request);
-    const { result, beneficiaryTab } = await test.step(
-      'Pre-requisite: seed case data, mock Tawtheeq, and log in as beneficiary',
-      () => dataPreparation.seedCase(),
-    );
+    const { result, beneficiaryTab } = await dataPreparation.seedCase();
 
     const divisionsList = new DivisionsList(beneficiaryTab, result);
-    const requestsPage = await test.step('openDivisionsList', () =>
-      divisionsList.run(),
-    );
+    const requestsPage = await divisionsList.run();
 
     const cashDivisionsPage = new CashDivisionsPage(beneficiaryTab);
     await cashDivisionsPage.showAssets();
@@ -52,7 +47,7 @@ test.describe('Inheritance seeder', () => {
     await expect(cashDivisionsPage.requestStatus()).toContainText('بانتظار موافقة الورثة');
 
     const heirAcceptance = new HeirAcceptance(seederPage, result);
-    await test.step('Other heirs log in and accept the division', () => heirAcceptance.run());
+    await heirAcceptance.run();
 
     await requestsPage.openRequestDataTab();
     await expect(requestsPage.distributionStatus()).toContainText('في انتظار التدقيق');
@@ -60,57 +55,37 @@ test.describe('Inheritance seeder', () => {
     await requestsPage.openDivisionsListingTab();
     // await expect(cashDivisionsPage.requestStatus()).toContainText('في انتظار التدقيق');
 
-
     await cashDivisionsPage.viewDivision();
     await cashDivisionsPage.openBankAccountTab();
     await expect(cashDivisionsPage.inquiryStatus()).toContainText('قيد الاستعلام');
-    // 
+
     await adminPage.bringToFront();
-    const divisionId = await test.step('Open the division dashboard in admin', () =>
-      openDivisionDashboard(adminPage, result.inheritanceId),
-    );
+    const divisionId = await openDivisionDashboard(adminPage, result.inheritanceId);
 
-    await test.step('Submit auditor approval in admin', () =>
-      new InheritanceActionsPage(adminPage).submitAuditorApprove(result.inheritanceId),
-    );
+    await new InheritanceActionsPage(adminPage).submitAuditorApprove(result.inheritanceId);
 
-    await test.step('Simulate Tarika funds transfer status', () =>
-      new TarikaFundsStatusClient(request).simulate(result, divisionId),
-    );
+    await new TarikaFundsStatusClient(request).simulate(result, divisionId);
 
     const divisionDashboardPage = new DivisionDashboardPage(adminPage);
-    await test.step('Complete heir inquiries', () =>
-      divisionDashboardPage.completeHeirInqs(divisionId, result.heirsCount),
-    );
+    await divisionDashboardPage.completeHeirInqs(divisionId, result.heirsCount);
 
     for (let i = 0; i < result.heirsCount; i++) {
       await expect(divisionDashboardPage.heirInquiryFsmState(i)).not.toContainText('requested');
     }
 
-    await test.step('Expire account choosing', () =>
-      divisionDashboardPage.expireAccountChoosing(),
-    );
+    await divisionDashboardPage.expireAccountChoosing();
 
-    await test.step('Submit Tarika distribute request', () =>
-      new TarikaDistributeReqClient(request).submitTarikaDistributeRequest(result, divisionId),
-    );
+    await new TarikaDistributeReqClient(request).submitTarikaDistributeRequest(result, divisionId);
 
     const submitTarikaFundsResults = new SubmitTarikaFundsResults(request, divisionDashboardPage);
     for (let i = 0; i < 2; i++) {
-      await test.step('Submit Tarika funds results', () =>
-        submitTarikaFundsResults.run(divisionId, result),
-      );
+      await submitTarikaFundsResults.run(divisionId, result);
     }
 
     await divisionDashboardPage.open(divisionId);
 
-    await test.step('Assert division status is completed', () =>
-      expect(divisionDashboardPage.divisionStatus()).toContainText('COMPLETED'),
-    );
+    await expect(divisionDashboardPage.divisionStatus()).toContainText('COMPLETED');
 
-    await test.step('Assert Ejada stage is completed', () =>
-      expect(divisionDashboardPage.ejadaStage()).toContainText('COMPLETED'),
-    );
-
+    await expect(divisionDashboardPage.ejadaStage()).toContainText('COMPLETED');
   });
 });
