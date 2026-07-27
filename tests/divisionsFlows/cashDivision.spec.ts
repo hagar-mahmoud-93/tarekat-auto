@@ -8,14 +8,14 @@ import { openDivisionDashboard } from '../../steps/open-division-dashboard';
 import { InheritanceActionsPage } from '../../pages/inheritance-actions.page';
 import { TarikaFundsStatusClient } from '../../api/clients/tarika-funds-status.client';
 import { TarikaDistributeReqClient } from '../../api/clients/tarika-distribute-req.client';
-import { TransferFundsResultClient } from '../../api/clients/transfer-funds-result.client';
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 import { DivisionDashboardPage } from '../../pages/division-dashboard.page';
+import { SubmitTarikaFundsResults } from '../../steps/submit-tarika-funds-results';
 
 test.describe('Inheritance seeder', () => {
 
   test('seeds a case, navigates to الطلبات, and opens case details @smoke', async ({ seederPage, request, page: adminPage }) => {
-    test.setTimeout(180_000); // long multi-stage flow with real backend processing between steps
+    test.setTimeout(300_000); // long multi-stage flow with real backend processing between steps
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 
     const dataPreparation = new DataPreparation(seederPage, request);
@@ -95,17 +95,21 @@ test.describe('Inheritance seeder', () => {
       new TarikaDistributeReqClient(request).submitTarikaDistributeRequest(result, divisionId),
     );
 
-    await test.step('Submit Tarika funds results', async () => {
-      const heirs = await divisionDashboardPage.getWarithHeirs(divisionId);
-      await new TransferFundsResultClient(request).submitTarikaFundsResults(
-        result.json.deceased.identityNumber,
-        divisionId,
-        heirs,
+    const submitTarikaFundsResults = new SubmitTarikaFundsResults(request, divisionDashboardPage);
+    for (let i = 0; i < 2; i++) {
+      await test.step('Submit Tarika funds results', () =>
+        submitTarikaFundsResults.run(divisionId, result),
       );
-    });
+    }
 
-    await test.step('Complete all instructions', () =>
-      divisionDashboardPage.completeAllInstructions(),
+    await divisionDashboardPage.open(divisionId);
+
+    await test.step('Assert division status is completed', () =>
+      expect(divisionDashboardPage.divisionStatus()).toContainText('COMPLETED'),
+    );
+
+    await test.step('Assert Ejada stage is completed', () =>
+      expect(divisionDashboardPage.ejadaStage()).toContainText('COMPLETED'),
     );
 
   });

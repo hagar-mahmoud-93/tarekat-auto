@@ -1,14 +1,35 @@
 import { Page } from '@playwright/test';
+import { expect } from '../fixtures/base.fixture';
 import { BasePage } from './base.page';
 import { env } from '../config/env';
 import { TransferFundsHeirResult } from '../api/clients/transfer-funds-result.client';
 
 type WarithOutboxEntry = { idNumber: string; idType: number; name: string; iban: string };
 type WarithInboxEntry = { id: string; amount: string };
+type WarithRows = { outbox: WarithOutboxEntry[]; inbox: WarithInboxEntry[] };
 
 export class DivisionDashboardPage extends BasePage {
   constructor(page: Page) {
     super(page);
+  }
+
+  async open(divisionId: string): Promise<void> {
+    await this.page.goto(`${env.admin.apiURL}/division_v2/division/${divisionId}/dashboard/`);
+    await this.page.waitForLoadState('networkidle').catch(() => { });
+  }
+
+  private summaryCard(label: string) {
+    return this.page
+      .locator('.summary-banner .summary-card')
+      .filter({ has: this.page.locator('label', { hasText: label }) });
+  }
+
+  divisionStatus() {
+    return this.summaryCard('Status').locator('.status-badge');
+  }
+
+  ejadaStage() {
+    return this.summaryCard('Ejada Stage').locator('.status-badge');
   }
 
   private heirInquiryRows() {
@@ -52,8 +73,7 @@ export class DivisionDashboardPage extends BasePage {
   }
 
   async completeHeirInqs(divisionId: string, heirsCount: number): Promise<void> {
-    await this.page.goto(`${env.admin.apiURL}/division_v2/division/${divisionId}/dashboard/`);
-    await this.page.waitForLoadState('networkidle').catch(() => { });
+    await this.open(divisionId);
 
     const rows = this.heirInquiryRows();
 
@@ -79,14 +99,8 @@ export class DivisionDashboardPage extends BasePage {
     await this.page.waitForLoadState('networkidle').catch(() => { });
   }
 
-  /**
-   * Reads the heir id/IBAN/name from the "ejada.warith_update" outbox request payload
-   * and the per-heir amount from the "distribution_requested" inbox result, merging them
-   * by idNumber into the shape Transfer_Funds_result expects.
-   */
-  async getWarithHeirs(divisionId: string): Promise<TransferFundsHeirResult[]> {
-    await this.page.goto(`${env.admin.apiURL}/division_v2/division/${divisionId}/dashboard/`);
-    await this.page.waitForLoadState('networkidle').catch(() => { });
+  private async readWarithRows(divisionId: string): Promise<WarithRows> {
+    await this.open(divisionId);
 
     const raw = await this.page.evaluate(() => {
       const preTextBySummary = (row: Element, summaryText: string): string | null => {
@@ -116,12 +130,30 @@ export class DivisionDashboardPage extends BasePage {
     const outbox: { WarithList: WarithOutboxEntry[] } = JSON.parse(raw.outboxPayload);
     const inbox: { WarithList: WarithInboxEntry[] } = JSON.parse(raw.inboxResult);
 
-    return outbox.WarithList.map((heir) => {
-      const amountEntry = inbox.WarithList.find((entry) => entry.id === heir.idNumber);
-      if (!amountEntry) {
-        throw new Error(`No distribution amount found for heir ${heir.idNumber}`);
-      }
+    return { outbox: outbox.WarithList, inbox: inbox.WarithList };
+  }
 
+  /**
+   * Reads the heir id/IBAN/name from the "ejada.warith_update" outbox request payload
+   * and the per-heir amount from the "distribution_requested" inbox result, merging them
+   * by idNumber into the shape Transfer_Funds_result expects.
+   *
+   * The inbox amount is computed asynchronously after the distribute request, so this polls
+   * the dashboard until every outbox heir has a matching amount instead of reading it once.
+   */
+  async getWarithHeirs(divisionId: string): Promise<TransferFundsHeirResult[]> {
+    let rows!: WarithRows;
+
+    await expect(async () => {
+      rows = await this.readWarithRows(divisionId);
+      const missing = rows.outbox.filter(
+        (heir) => !rows.inbox.some((entry) => entry.id === heir.idNumber),
+      );
+      expect(missing, `still awaiting distribution amounts for: ${missing.map((h) => h.idNumber).join(', ')}`).toHaveLength(0);
+    }).toPass({ timeout: 120_000 });
+
+    return rows.outbox.map((heir) => {
+      const amountEntry = rows.inbox.find((entry) => entry.id === heir.idNumber)!;
       return {
         idNumber: heir.idNumber,
         idType: heir.idType,

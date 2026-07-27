@@ -5,5 +5,7 @@ export async function openDivisionDashboard(adminPage: Page, inheritanceId: stri
   const divisionAdminPage = new DivisionAdminPage(adminPage);
   await divisionAdminPage.open();
   await divisionAdminPage.searchByInheritanceId(inheritanceId);
-  return divisionAdminPage.openDashboard();
+  const divisionId = await divisionAdminPage.openDashboard();
+  console.log('Division dashboard URL:', adminPage.url());
+  return divisionId;
 }
