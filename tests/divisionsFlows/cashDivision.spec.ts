@@ -8,6 +8,7 @@ import { openDivisionDashboard } from '../../steps/open-division-dashboard';
 import { InheritanceActionsPage } from '../../pages/inheritance-actions.page';
 import { TarikaFundsStatusClient } from '../../api/clients/tarika-funds-status.client';
 import { TarikaDistributeReqClient } from '../../api/clients/tarika-distribute-req.client';
+import { TransferFundsResultClient } from '../../api/clients/transfer-funds-result.client';
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 import { DivisionDashboardPage } from '../../pages/division-dashboard.page';
 
@@ -79,11 +80,12 @@ test.describe('Inheritance seeder', () => {
 
     const divisionDashboardPage = new DivisionDashboardPage(adminPage);
     await test.step('Complete heir inquiries', () =>
-      divisionDashboardPage.completeHeirInqs(divisionId),
+      divisionDashboardPage.completeHeirInqs(divisionId, result.heirsCount),
     );
 
-    await expect(divisionDashboardPage.heirInquiryFsmState(0)).not.toContainText('requested');
-    await expect(divisionDashboardPage.heirInquiryFsmState(1)).not.toContainText('requested');
+    for (let i = 0; i < result.heirsCount; i++) {
+      await expect(divisionDashboardPage.heirInquiryFsmState(i)).not.toContainText('requested');
+    }
 
     await test.step('Expire account choosing', () =>
       divisionDashboardPage.expireAccountChoosing(),
@@ -92,6 +94,15 @@ test.describe('Inheritance seeder', () => {
     await test.step('Submit Tarika distribute request', () =>
       new TarikaDistributeReqClient(request).submitTarikaDistributeRequest(result, divisionId),
     );
+
+    await test.step('Submit Tarika funds results', async () => {
+      const heirs = await divisionDashboardPage.getWarithHeirs(divisionId);
+      await new TransferFundsResultClient(request).submitTarikaFundsResults(
+        result.json.deceased.identityNumber,
+        divisionId,
+        heirs,
+      );
+    });
 
   });
 });
