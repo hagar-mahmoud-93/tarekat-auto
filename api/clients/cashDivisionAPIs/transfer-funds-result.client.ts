@@ -1,5 +1,5 @@
 import { APIRequestContext } from '@playwright/test';
-import { env } from '../../config/env';
+import { env } from '../../../config/env';
 
 const TransferStatus = { Success: 250, Failure: 251 } as const;
 
