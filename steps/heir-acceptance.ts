@@ -1,12 +1,20 @@
+import { Page } from '@playwright/test';
 import { SeederPage, SeedResult } from '../pages/seeder.page';
 import { RequestsPage } from '../pages/requests.page';
 import { CashDivisionsPage } from '../pages/cash-divisions.page';
 import { fillMobileNumberIfPrompted } from './fill-mobile-number';
 
+type DivisionPage = {
+  viewDivision(): Promise<void>;
+  acceptDivisionAgreement(): Promise<void>;
+  acceptDivision(): Promise<void>;
+};
+
 export class HeirAcceptance {
   constructor(
     private readonly seederPage: SeederPage,
     private readonly result: SeedResult,
+    private readonly DivisionPage: new (page: Page) => DivisionPage = CashDivisionsPage,
   ) {}
 
   /** Logs in as every heir other than the beneficiary and accepts the division. */
@@ -24,10 +32,10 @@ export class HeirAcceptance {
       await requestsPage.openCaseDetails();
       await requestsPage.openDivisionsListingTab();
 
-      const cashDivisionsPage = new CashDivisionsPage(heirTab);
-      await cashDivisionsPage.viewDivision();
-      await cashDivisionsPage.acceptDivisionAgreement();
-      await cashDivisionsPage.acceptDivision();
+      const divisionPage = new this.DivisionPage(heirTab);
+      await divisionPage.viewDivision();
+      await divisionPage.acceptDivisionAgreement();
+      await divisionPage.acceptDivision();
 
       await heirTab.close();
     }

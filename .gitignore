@@ -6,6 +6,9 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+.playwright-cli/
+
+tests/divisionsFlows/_explore2.spec.ts
 
 data/*
 config/env.ts
