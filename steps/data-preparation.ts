@@ -1,7 +1,7 @@
 import { APIRequestContext, Page } from '@playwright/test';
 import { expect } from '../fixtures/base.fixture';
 import { env } from '../config/env';
-import { SeederPage, SeedResult } from '../pages/seeder.page';
+import { SeederPage, SeedResult, DivisionType } from '../pages/seeder.page';
 import { TawtheeqClient } from '../api/clients/tawtheeq.client';
 import { fillMobileNumberIfPrompted } from './fill-mobile-number';
 
@@ -17,9 +17,9 @@ export class DataPreparation {
   ) {}
 
   /** Seeds a case via the admin seeder, mocks it into Tawtheeq, and logs in as the beneficiary. */
-  async seedCase(): Promise<SeededCase> {
+  async seedCase(divisionType?: DivisionType): Promise<SeededCase> {
     await this.seederPage.login();
-    await this.seederPage.generateRandomData();
+    await this.seederPage.generateRandomData(divisionType);
     const result = await this.seederPage.seedCase();
 
     const tawtheeqClient = new TawtheeqClient(this.request, env.tawtheeq.baseURL);
