@@ -77,6 +77,7 @@ test.describe('Inheritance seeder', () => {
       divisionId = await openDivisionDashboard(adminPage, result.inheritanceId);
 
       await new InheritanceActionsPage(adminPage).submitAuditorApprove(result.inheritanceId);
+      console.log('hello');
     });
 
 
