@@ -87,5 +87,7 @@ test.describe('Inheritance seeder', () => {
     await expect(divisionDashboardPage.divisionStatus()).toContainText('COMPLETED');
 
     await expect(divisionDashboardPage.ejadaStage()).toContainText('COMPLETED');
+        await expect(divisionDashboardPage.ejadaStage()).toContainText('COMPLETED');
+
   });
 });
