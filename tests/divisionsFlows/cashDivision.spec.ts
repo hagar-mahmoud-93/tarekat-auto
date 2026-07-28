@@ -11,12 +11,15 @@ import { TarikaDistributeReqClient } from '../../api/clients/cashDivisionAPIs/ta
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 import { DivisionDashboardPage } from '../../pages/division-dashboard.page';
 import { SubmitTarikaFundsResults } from '../../steps/submit-tarika-funds-results';
+import { DivisionType } from '../../pages/seeder.page';
 
 test.describe('Inheritance seeder', () => {
 
   test('Cash division - Bank Accounts @smoke', async ({ seederPage, request, page: adminPage }) => {
     test.setTimeout(300_000); // long multi-stage flow with real backend processing between steps
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
+
+    const divisionType: DivisionType = 'cashBankAccounts';
 
     let result: Awaited<ReturnType<DataPreparation['seedCase']>>['result'];
     let beneficiaryTab: Awaited<ReturnType<DataPreparation['seedCase']>>['beneficiaryTab'];
@@ -27,7 +30,7 @@ test.describe('Inheritance seeder', () => {
 
     await test.step('Seed case and open the divisions listing', async () => {
       const dataPreparation = new DataPreparation(seederPage, request);
-      ({ result, beneficiaryTab } = await dataPreparation.seedCase());
+      ({ result, beneficiaryTab } = await dataPreparation.seedCase(divisionType));
 
       const divisionsList = new DivisionsList(beneficiaryTab, result);
       requestsPage = await divisionsList.run();
@@ -85,7 +88,7 @@ test.describe('Inheritance seeder', () => {
       await new InheritanceActionsPage(adminPage).submitAuditorApprove(result.inheritanceId);
     });
 
-    await test.step('Simulate Tarika funds status and complete heir inquiries', async () => {
+    await test.step('Simulate Tarika funds status and complete heir inquiries and account selection', async () => {
       await new TarikaFundsStatusClient(request).simulate(result, divisionId);
 
       divisionDashboardPage = new DivisionDashboardPage(adminPage);

@@ -1,14 +1,24 @@
 {
   "compilerOptions": {
+    // JS language version the code targets/compiles down to (e.g. optional chaining, top-level await are OK to use)
     "target": "ES2022",
+    // Emit CommonJS require()/module.exports, matching how these .ts files are run under Node
     "module": "commonjs",
-    "lib": ["ES2022"],
+    // Built-in global type declarations available: ES2022 (Array, Promise, ...) plus DOM (document, HTMLInputElement, ...) for page.evaluate() callbacks
+    "lib": ["ES2022", "DOM"],
+    // Include Node.js global types (process, Buffer, ...)
     "types": ["node"],
+    // Enable all strict type-checking rules (no implicit any, strict null checks, etc.)
     "strict": true,
+    // Allow default imports (import x from 'y') from CommonJS packages that don't use ES module syntax natively
     "esModuleInterop": true,
+    // Skip type-checking inside .d.ts files from node_modules (faster, avoids noise from third-party type bugs)
     "skipLibCheck": true,
+    // Error if an import's casing doesn't match the file name on disk (avoids bugs that only show up on case-sensitive filesystems like Linux CI)
     "forceConsistentCasingInFileNames": true,
+    // Allow importing .json files directly (import data from './file.json')
     "resolveJsonModule": true
   },
+  // Don't type-check third-party package source
   "exclude": ["node_modules"]
 }
