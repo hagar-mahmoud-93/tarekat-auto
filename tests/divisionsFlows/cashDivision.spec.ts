@@ -78,9 +78,9 @@ test.describe('Inheritance seeder', () => {
     await new TarikaDistributeReqClient(request).submitTarikaDistributeRequest(result, divisionId);
 
     const submitTarikaFundsResults = new SubmitTarikaFundsResults(request, divisionDashboardPage);
-    for (let i = 0; i < 2; i++) {
-      await submitTarikaFundsResults.run(divisionId, result);
-    }
+    // Tarika funds results are processed in two settlement rounds
+    await submitTarikaFundsResults.run(divisionId, result);
+    await submitTarikaFundsResults.run(divisionId, result);
 
     await divisionDashboardPage.open(divisionId);
 
