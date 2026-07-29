@@ -1,6 +1,7 @@
 import { APIRequestContext } from '@playwright/test';
 import { env } from '../../../config/env';
 import { SeedResult } from '../../../pages/seeder.page';
+import { loggedPost } from '../log-request';
 
 export class TarikaDistributeReqClient {
   private readonly baseURL = env.admin.apiURL.replace(/\/admin$/, '');
@@ -15,11 +16,9 @@ export class TarikaDistributeReqClient {
       TarikaRequestNumber: divisionId,
     };
 
-    console.log('[TarikaDistributeReq] POST', url, JSON.stringify(payload));
-    const response = await this.request.post(url, {
+    await loggedPost(this.request, 'TarikaDistributeReq', url, {
       data: payload,
       headers: { 'content-type': 'application/json' },
     });
-    console.log('[TarikaDistributeReq] Response status:', response.status());
   }
 }

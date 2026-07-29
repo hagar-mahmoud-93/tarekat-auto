@@ -4,9 +4,7 @@ import { BasePage } from './base.page';
 import { env } from '../config/env';
 import { TransferFundsHeirResult } from '../api/clients/cashDivisionAPIs/transfer-funds-result.client';
 
-type WarithOutboxEntry = { idNumber: string; idType: number; name: string; iban: string };
-type WarithInboxEntry = { id: string; amount: string };
-type WarithRows = { outbox: WarithOutboxEntry[]; inbox: WarithInboxEntry[] };
+type WarithDistributionEntry = { idNumber: string; idType: number; name: string; iban: string; amount: string };
 
 export class DivisionDashboardPage extends BasePage {
   constructor(page: Page) {
@@ -99,68 +97,56 @@ export class DivisionDashboardPage extends BasePage {
     await this.page.waitForLoadState('networkidle').catch(() => { });
   }
 
-  private async readWarithRows(divisionId: string): Promise<WarithRows> {
-    await this.open(divisionId);
+  private warithDistributionsTable() {
+    return this.page.locator('h3', { hasText: 'Warith Distributions' }).locator('xpath=following::table[1]');
+  }
 
-    const raw = await this.page.evaluate(() => {
-      const preTextBySummary = (row: Element, summaryText: string): string | null => {
-        const details = Array.from(row.querySelectorAll('details')).find(
-          (d) => d.querySelector('summary')?.textContent?.trim() === summaryText,
-        );
-        return details?.querySelector('pre')?.textContent ?? null;
-      };
+  /** Reads the heir id/IBAN/name/amount from the currently loaded "Warith Distributions" table. */
+  private async readWarithDistributions(): Promise<WarithDistributionEntry[]> {
+    const rows = this.warithDistributionsTable().locator('tbody tr');
+    const rowCount = await rows.count();
 
-      const rows = Array.from(document.querySelectorAll('table tr'));
-      const outboxRow = rows.find((row) => row.textContent?.includes('ejada.warith_update'));
-      const inboxRow = rows.find((row) => row.textContent?.includes('distribution_requested'));
-
-      return {
-        outboxPayload: outboxRow ? preTextBySummary(outboxRow, 'Request payload') : null,
-        inboxResult: inboxRow ? preTextBySummary(inboxRow, 'Result') : null,
-      };
-    });
-
-    if (!raw.outboxPayload) {
-      throw new Error('Could not find "ejada.warith_update" outbox entry request payload');
-    }
-    if (!raw.inboxResult) {
-      throw new Error('Could not find "distribution_requested" inbox entry result');
+    const entries: WarithDistributionEntry[] = [];
+    for (let i = 0; i < rowCount; i++) {
+      const cells = rows.nth(i).locator('td');
+      const [name, idNumber, iban, amount] = await Promise.all([
+        cells.nth(1).innerText(),
+        cells.nth(2).innerText(),
+        cells.nth(3).innerText(),
+        cells.nth(4).innerText(),
+      ]);
+      entries.push({ idNumber: idNumber.trim(), idType: 1, name: name.trim(), iban: iban.trim(), amount: amount.trim() });
     }
 
-    const outbox: { WarithList: WarithOutboxEntry[] } = JSON.parse(raw.outboxPayload);
-    const inbox: { WarithList: WarithInboxEntry[] } = JSON.parse(raw.inboxResult);
-
-    return { outbox: outbox.WarithList, inbox: inbox.WarithList };
+    return entries;
   }
 
   /**
-   * Reads the heir id/IBAN/name from the "ejada.warith_update" outbox request payload
-   * and the per-heir amount from the "distribution_requested" inbox result, merging them
-   * by idNumber into the shape Transfer_Funds_result expects.
+   * Reads the heir id/IBAN/name/amount from the "Warith Distributions" table, which is scoped
+   * to this division (unlike the Outbox/Inbox message tables, which can retain unrelated entries
+   * from other divisions/runs).
    *
-   * The inbox amount is computed asynchronously after the distribute request, so this polls
-   * the dashboard until every outbox heir has a matching amount instead of reading it once.
+   * Loads the dashboard once, then polls that same DOM snapshot until every heir has a row with
+   * a numeric amount, without reloading the page on each retry.
    */
-  async getWarithHeirs(divisionId: string): Promise<TransferFundsHeirResult[]> {
-    let rows!: WarithRows;
+  async getWarithHeirs(divisionId: string, heirsCount: number): Promise<TransferFundsHeirResult[]> {
+    await this.open(divisionId);
+
+    let entries: WarithDistributionEntry[] = [];
 
     await expect(async () => {
-      rows = await this.readWarithRows(divisionId);
-      const missing = rows.outbox.filter(
-        (heir) => !rows.inbox.some((entry) => entry.id === heir.idNumber),
-      );
-      expect(missing, `still awaiting distribution amounts for: ${missing.map((h) => h.idNumber).join(', ')}`).toHaveLength(0);
-    }).toPass({ timeout: 120_000 });
+      entries = await this.readWarithDistributions();
+      const pending = entries.filter((entry) => Number.isNaN(parseFloat(entry.amount)));
+      expect(entries, 'still awaiting warith distribution rows').toHaveLength(heirsCount);
+      expect(pending, `still awaiting distribution amounts for: ${pending.map((e) => e.idNumber).join(', ')}`).toHaveLength(0);
+    }).toPass({ timeout: 90_000 });
 
-    return rows.outbox.map((heir) => {
-      const amountEntry = rows.inbox.find((entry) => entry.id === heir.idNumber)!;
-      return {
-        idNumber: heir.idNumber,
-        idType: heir.idType,
-        name: heir.name,
-        IBAN: heir.iban,
-        amount: amountEntry.amount,
-      };
-    });
+    return entries.map((entry) => ({
+      idNumber: entry.idNumber,
+      idType: entry.idType,
+      name: entry.name,
+      IBAN: entry.iban,
+      amount: parseFloat(entry.amount).toFixed(2),
+    }));
   }
 }

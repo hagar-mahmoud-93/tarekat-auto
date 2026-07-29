@@ -1,5 +1,6 @@
 import { APIRequestContext } from '@playwright/test';
 import { env } from '../../../config/env';
+import { loggedPost } from '../log-request';
 
 const TransferStatus = { Success: 250, Failure: 251 } as const;
 
@@ -38,12 +39,9 @@ export class TransferFundsResultClient {
       })),
     };
 
-    console.log('[TransferFundsResult] POST', url, JSON.stringify(payload));
-    const response = await this.request.post(url, {
+    await loggedPost(this.request, 'TransferFundsResult', url, {
       data: payload,
       headers: { 'content-type': 'application/json' },
     });
-    console.log('[TransferFundsResult] Response status:', response.status());
-    console.log('[TransferFundsResult] Response body:', await response.text());
   }
 }

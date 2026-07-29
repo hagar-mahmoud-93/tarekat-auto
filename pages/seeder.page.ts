@@ -9,6 +9,11 @@ export type AssetAccount = {
   balance: string;
 };
 
+export type InvestmentAccount = {
+  accountNumber: string;
+  balance: string;
+};
+
 export type SeedCaseJson = {
   _name: string;
   deceased: { identityNumber: string; [key: string]: unknown };
@@ -17,7 +22,7 @@ export type SeedCaseJson = {
   request: { id: number; requestNumber: string };
   estateAssets: {
     bankAccounts?: AssetAccount[];
-    investmentAccounts?: AssetAccount[];
+    investments?: InvestmentAccount[];
     [key: string]: unknown;
   };
 };
@@ -51,7 +56,7 @@ export class SeederPage extends BasePage {
 
       if (divisionType === 'cashInvestmentAccounts') {
         uncheck('gen_include_bank');
-      } else if (divisionType !== 'cashBankInvestmentAccounts') {
+      } else if (divisionType == 'cashBankAccounts') {
         uncheck('gen_include_investment');
       }
     }, divisionType);
