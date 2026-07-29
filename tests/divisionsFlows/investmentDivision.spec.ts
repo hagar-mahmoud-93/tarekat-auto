@@ -6,7 +6,7 @@ import { DivisionsList } from '../../steps/divisions-list';
 import { HeirAcceptance } from '../../steps/heir-acceptance';
 import { openDivisionDashboard } from '../../steps/open-division-dashboard';
 import { InheritanceActionsPage } from '../../pages/inheritance-actions.page';
-import { TarikaFundsStatusClient } from '../../api/clients/cashDivisionAPIs/tarika-funds-status-cashBankAccounts.client';
+import { TarikaFundsStatusClient } from '../../api/clients/cashDivisionAPIs/tarika-funds-status.client';
 import { TarikaDistributeReqClient } from '../../api/clients/cashDivisionAPIs/tarika-distribute-req.client';
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 import { DivisionDashboardPage } from '../../pages/division-dashboard.page';
