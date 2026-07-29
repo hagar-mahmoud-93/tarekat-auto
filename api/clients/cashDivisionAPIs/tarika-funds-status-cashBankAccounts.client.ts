@@ -1,6 +1,7 @@
 import { APIRequestContext } from '@playwright/test';
 import { env } from '../../../config/env';
 import { SeedResult } from '../../../pages/seeder.page';
+import { loggedPost } from '../log-request';
 
 const AssetType = { BankAccount: 240, InvestmentAccount: 241 } as const;
 const TransactionStatus = { Success: 250, Failure: 251 } as const;
@@ -15,76 +16,73 @@ export class TarikaFundsStatusClient {
     const tarikaRequestNumber = divisionId;
 
     const bankAccounts = result.json.estateAssets.bankAccounts ?? [];
-    const investmentAccounts = result.json.estateAssets.investmentAccounts ?? [];
-    const hasBoth = bankAccounts.length > 0 && investmentAccounts.length > 0;
+    const investments = result.json.estateAssets.investments ?? [];
+    const hasBoth = bankAccounts.length > 0 && investments.length > 0;
 
-    if (bankAccounts.length === 0 && investmentAccounts.length === 0) {
+    if (bankAccounts.length === 0 && investments.length === 0) {
       throw new Error(
         `No accounts found in estateAssets. Actual keys: ${Object.keys(result.json.estateAssets).join(', ')}`,
       );
     }
 
     if (bankAccounts.length > 0) {
-      await this.post({
-        deceasedIdNumber,
-        tarikaRequestNumber,
+      await this.post(deceasedIdNumber, tarikaRequestNumber, {
         assetType: AssetType.BankAccount,
-        accounts: bankAccounts.map((a) => ({ iban: a.iban, amount: parseFloat(a.balance) })),
         listKey: 'BankAccountStatusList',
         emptyListKey: 'InvestmentAccountStatusList',
+        accountList: bankAccounts.map((a) => ({
+          IBAN: a.iban,
+          transactionStatus: TransactionStatus.Success,
+          ExchangeRate: 1.0,
+          ErrorDescription: null,
+          ErrorCode: null,
+          Amount: parseFloat(a.balance),
+        })),
         isCompleted: !hasBoth,
       });
     }
 
-    if (investmentAccounts.length > 0) {
-      await this.post({
-        deceasedIdNumber,
-        tarikaRequestNumber,
+    if (investments.length > 0) {
+      await this.post(deceasedIdNumber, tarikaRequestNumber, {
         assetType: AssetType.InvestmentAccount,
-        accounts: investmentAccounts.map((a) => ({ iban: a.iban, amount: parseFloat(a.balance) })),
         listKey: 'InvestmentAccountStatusList',
         emptyListKey: 'BankAccountStatusList',
+        accountList: investments.map((a) => ({
+          transactionStatus: TransactionStatus.Success,
+          AccountNumber: a.accountNumber,
+        })),
         isCompleted: true,
       });
     }
   }
 
-  private async post(args: {
-    deceasedIdNumber: string;
-    tarikaRequestNumber: string;
-    assetType: 240 | 241;
-    accounts: { iban: string; amount: number }[];
-    listKey: 'BankAccountStatusList' | 'InvestmentAccountStatusList';
-    emptyListKey: 'BankAccountStatusList' | 'InvestmentAccountStatusList';
-    isCompleted: boolean;
-  }): Promise<void> {
-    const accountList = args.accounts.map((a) => ({
-      IBAN: a.iban,
-      transactionStatus: TransactionStatus.Success,
-      ExchangeRate: 1.0,
-      ErrorDescription: null,
-      ErrorCode: null,
-      Amount: a.amount,
-    }));
-
+  private async post(
+    deceasedIdNumber: string,
+    tarikaRequestNumber: string,
+    args: {
+      assetType: 240 | 241;
+      listKey: 'BankAccountStatusList' | 'InvestmentAccountStatusList';
+      emptyListKey: 'BankAccountStatusList' | 'InvestmentAccountStatusList';
+      accountList: unknown[];
+      isCompleted: boolean;
+    },
+  ): Promise<void> {
     const url = `${this.baseURL}/api/v1/inheritance/Transfer_Tarika_Funds_Status/`;
     const payload = {
       model: {
-        idNumber: args.deceasedIdNumber,
+        idNumber: deceasedIdNumber,
         assetType: args.assetType,
         IsCompleted: args.isCompleted,
-        [args.listKey]: accountList,
+        [args.listKey]: args.accountList,
         [args.emptyListKey]: [],
-        TarikaRequestNumber: args.tarikaRequestNumber,
+        TarikaRequestNumber: tarikaRequestNumber,
         requestStatus: 1,
       },
     };
 
-    console.log('[TarikaFundsStatus] POST', url, JSON.stringify(payload));
-    const response = await this.request.post(url, {
+    await loggedPost(this.request, 'TarikaFundsStatus', url, {
       data: payload,
       headers: { 'content-type': 'application/json' },
     });
-    console.log('[TarikaFundsStatus] Response status:', response.status());
   }
 }
