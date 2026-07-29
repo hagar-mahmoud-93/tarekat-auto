@@ -1,6 +1,6 @@
 import { APIRequestContext } from '@playwright/test';
 import { env } from '../../../config/env';
-import { SeedResult } from '../../../pages/seeder.page';
+import { SeedResult, DivisionType } from '../../../pages/seeder.page';
 import { loggedPost } from '../log-request';
 
 const AssetType = { BankAccount: 240, InvestmentAccount: 241 } as const;
@@ -11,25 +11,25 @@ export class TarikaFundsStatusClient {
 
   constructor(private readonly request: APIRequestContext) {}
 
-  async simulate(result: SeedResult, divisionId: string): Promise<void> {
+  async simulate(result: SeedResult, divisionId: string, divisionType: DivisionType): Promise<void> {
     const deceasedIdNumber = result.json.deceased.identityNumber;
     const tarikaRequestNumber = divisionId;
+    const both = divisionType === 'cashBankInvestmentAccounts';
 
-    const bankAccounts = result.json.estateAssets.bankAccounts ?? [];
-    const investments = result.json.estateAssets.investments ?? [];
-    const hasBoth = bankAccounts.length > 0 && investments.length > 0;
+    if (divisionType === 'cashBankAccounts' || both) {
+      const bankAccounts = result.json.estateAssets.bankAccounts ?? [];
+      if (bankAccounts.length === 0) {
+        throw new Error(
+          `No bank accounts found in estateAssets. Actual keys: ${Object.keys(result.json.estateAssets).join(', ')}`,
+        );
+      }
 
-    if (bankAccounts.length === 0 && investments.length === 0) {
-      throw new Error(
-        `No accounts found in estateAssets. Actual keys: ${Object.keys(result.json.estateAssets).join(', ')}`,
-      );
-    }
-
-    if (bankAccounts.length > 0) {
+      // Per-asset-type production callback shape: only the matching list, no empty companion key.
+      // When both asset types are present, the legacy mixed shape includes the other list as empty.
       await this.post(deceasedIdNumber, tarikaRequestNumber, {
         assetType: AssetType.BankAccount,
         listKey: 'BankAccountStatusList',
-        emptyListKey: 'InvestmentAccountStatusList',
+        emptyListKey: both ? 'InvestmentAccountStatusList' : undefined,
         accountList: bankAccounts.map((a) => ({
           IBAN: a.iban,
           transactionStatus: TransactionStatus.Success,
@@ -38,15 +38,22 @@ export class TarikaFundsStatusClient {
           ErrorCode: null,
           Amount: parseFloat(a.balance),
         })),
-        isCompleted: !hasBoth,
+        isCompleted: !both,
       });
     }
 
-    if (investments.length > 0) {
+    if (divisionType === 'cashInvestmentAccounts' || both) {
+      const investments = result.json.estateAssets.investments ?? [];
+      if (investments.length === 0) {
+        throw new Error(
+          `No investment accounts found in estateAssets. Actual keys: ${Object.keys(result.json.estateAssets).join(', ')}`,
+        );
+      }
+
       await this.post(deceasedIdNumber, tarikaRequestNumber, {
         assetType: AssetType.InvestmentAccount,
         listKey: 'InvestmentAccountStatusList',
-        emptyListKey: 'BankAccountStatusList',
+        emptyListKey: both ? 'BankAccountStatusList' : undefined,
         accountList: investments.map((a) => ({
           transactionStatus: TransactionStatus.Success,
           AccountNumber: a.accountNumber,
@@ -62,7 +69,7 @@ export class TarikaFundsStatusClient {
     args: {
       assetType: 240 | 241;
       listKey: 'BankAccountStatusList' | 'InvestmentAccountStatusList';
-      emptyListKey: 'BankAccountStatusList' | 'InvestmentAccountStatusList';
+      emptyListKey?: 'BankAccountStatusList' | 'InvestmentAccountStatusList';
       accountList: unknown[];
       isCompleted: boolean;
     },
@@ -71,12 +78,12 @@ export class TarikaFundsStatusClient {
     const payload = {
       model: {
         idNumber: deceasedIdNumber,
-        assetType: args.assetType,
-        IsCompleted: args.isCompleted,
-        [args.listKey]: args.accountList,
-        [args.emptyListKey]: [],
-        TarikaRequestNumber: tarikaRequestNumber,
         requestStatus: 1,
+        TarikaRequestNumber: tarikaRequestNumber,
+        assetType: args.assetType,
+        [args.listKey]: args.accountList,
+        ...(args.emptyListKey ? { [args.emptyListKey]: [] } : {}),
+        IsCompleted: args.isCompleted,
       },
     };
 
