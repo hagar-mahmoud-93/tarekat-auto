@@ -55,4 +55,9 @@ export class InvestmentDivisionsPage extends BasePage {
   requestStatus() {
     return this.locators.requestStatus();
   }
+
+  /** The dialog shown when starting the division is blocked (e.g. a minor heir). */
+  blockerDialog() {
+    return this.locators.blockerDialog();
+  }
 }
