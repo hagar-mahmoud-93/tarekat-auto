@@ -14,7 +14,7 @@ import { SubmitTarikaFundsResults } from '../../steps/submit-tarika-funds-result
 
 test.describe('Inheritance seeder', () => {
 
-  test('Investment division - Transfer flow @smoke', async ({ seederPage, request, page: adminPage }) => {
+  test('Investment division - Transfer flow @smoke @division @investment-division', async ({ seederPage, request, page: adminPage }) => {
     test.setTimeout(300_000); // long multi-stage flow with real backend processing between steps
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 

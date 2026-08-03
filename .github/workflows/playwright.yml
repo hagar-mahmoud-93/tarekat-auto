@@ -4,6 +4,12 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  # Fired by other repos' pipelines (e.g. BE/FE) when their change touches an area we cover here,
+  # so we catch regressions before they merge. client_payload.label maps to a @tag on the relevant
+  # suite (@cash-division, @investment-division, @division, @nafith-login, ...) — see tests/ for
+  # the full set. No label runs the full suite.
+  repository_dispatch:
+    types: [run-tests]
 jobs:
   test:
     timeout-minutes: 60
@@ -18,7 +24,20 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Run Playwright tests
-      run: npx playwright test
+      env:
+        # Kept out of the `run:` template and passed as an env var so an untrusted caller can't
+        # inject shell syntax through client_payload.label.
+        TEST_LABEL: ${{ github.event.client_payload.label }}
+      run: |
+        if [ -n "$TEST_LABEL" ]; then
+          if [[ ! "$TEST_LABEL" =~ ^[a-z0-9-]+$ ]]; then
+            echo "::error::Invalid label '$TEST_LABEL' — must match ^[a-z0-9-]+$"
+            exit 1
+          fi
+          npx playwright test --grep "@$TEST_LABEL"
+        else
+          npx playwright test
+        fi
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
