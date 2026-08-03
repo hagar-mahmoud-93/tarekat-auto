@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { BasePage } from './base.page';
-import { NewTicketLocators } from '../locators/new-ticket.locators';
+import { NewTicketLocators } from '../locators/help-center.locators';
 
 export class NewTicketPage extends BasePage {
   private readonly locators = new NewTicketLocators(this.page);
@@ -19,16 +19,50 @@ export class NewTicketPage extends BasePage {
     }).toPass({ timeout: 30_000 });
 
     await this.locators.mobileNumberInput().fill(mobileNumber);
-    await this.clickSaveAndContinue();
+
+    // "حفظ ومتابعة" occasionally no-ops on its first click here: no request fires and step 1
+    // stays put, without popping the error dialog clickSaveAndContinue already retries on.
+    // Re-click until step 2 (the شكوى/طلب radio group) actually renders.
+    await expect(async () => {
+      await this.clickSaveAndContinue();
+      await expect(this.locators.ticketTypeRadio('شكوى')).toBeVisible({ timeout: 3000 });
+    }).toPass({ timeout: 30_000 });
   }
 
-  /** Step 2 (بيانات التذكرة): ticket type, main/sub category, and problem details. */
+  mobileNumberInput() {
+    return this.locators.mobileNumberInput();
+  }
+
+  mobileNumberRequiredError() {
+    return this.locators.mobileNumberRequiredError();
+  }
+
+  mobileNumberFormatError() {
+    return this.locators.mobileNumberFormatError();
+  }
+
+  /**
+   * Step 2 (بيانات التذكرة): ticket type, main/sub category, and problem details.
+   * Some categories' dynamic form also requires طلبات المستفيد (requestDetails) — pass it
+   * when the chosen category/subcategory renders that field.
+   */
   async fillTicketDetailsStep(opts: {
     type: 'شكوى' | 'طلب';
     mainCategory: string;
     subCategory: string;
     details: string;
+    requestDetails?: string;
   }) {
+    await this.selectTicketTypeAndCategory(opts);
+    await this.locators.detailsTextbox().fill(opts.details);
+    if (opts.requestDetails) {
+      await this.locators.requestDetailsTextbox().fill(opts.requestDetails);
+    }
+    await this.clickSaveAndContinue();
+  }
+
+  /** Ticket type + main/sub category, without touching التفاصيل — the fields that make it visible. */
+  async selectTicketTypeAndCategory(opts: { type: 'شكوى' | 'طلب'; mainCategory: string; subCategory: string }) {
     await this.locators.ticketTypeRadio(opts.type).click();
 
     await this.locators.mainCategoryCombobox().click();
@@ -36,16 +70,51 @@ export class NewTicketPage extends BasePage {
 
     await this.locators.subCategoryCombobox().click();
     await this.locators.categoryOption(opts.subCategory).click();
+  }
 
-    await this.locators.detailsTextbox().fill(opts.details);
-    await this.clickSaveAndContinue();
+  detailsTextbox() {
+    return this.locators.detailsTextbox();
+  }
+
+  detailsErrorMessage() {
+    return this.locators.detailsErrorMessage();
+  }
+
+  requestDetailsTextbox() {
+    return this.locators.requestDetailsTextbox();
+  }
+
+  deceasedIdInput() {
+    return this.locators.deceasedIdInput();
+  }
+
+  deceasedIdError() {
+    return this.locators.deceasedIdError();
+  }
+
+  heirsDeedNumberInput() {
+    return this.locators.heirsDeedNumberInput();
+  }
+
+  heirsDeedNumberError() {
+    return this.locators.heirsDeedNumberError();
+  }
+
+  async uploadAttachment(fileName: string = 'attachment.pdf') {
+    await this.locators.attachmentFileInput().setInputFiles({
+      name: fileName,
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('%PDF-1.4\n%%EOF'),
+    });
   }
 
   /**
    * Clicking "حفظ ومتابعة" can itself re-trigger the flaky verify-applicant call, popping
    * the same blank error dialog seen on step 1; dismiss it and retry the click until it advances.
+   * Public because tests that expect this click to fail validation (and stay on the same step)
+   * also need to trigger it directly.
    */
-  private async clickSaveAndContinue(maxAttempts: number = 5) {
+  async clickSaveAndContinue(maxAttempts: number = 5) {
     const errorBackButton = this.page.getByRole('dialog').getByRole('button', { name: 'العودة' });
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {

@@ -12,3 +12,6 @@ tests/divisionsFlows/_explore2.spec.ts
 
 data/*
 config/env.ts
+.DS_Store
+test-results/
+playwright-report/
