@@ -89,7 +89,7 @@ test.describe('CRM complaints', () => {
     });
 
     await test.step('A valid Saudi mobile number (05XXXXXXXX) clears the error', async () => {
-      await newTicketPage.mobileNumberInput().fill('0501234567');
+      await newTicketPage.mobileNumberInput().fill('0531234567');
       await newTicketPage.mobileNumberInput().blur();
       await expect(newTicketPage.mobileNumberFormatError()).toBeHidden();
       await expect(newTicketPage.mobileNumberRequiredError()).toBeHidden();
