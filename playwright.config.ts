@@ -70,7 +70,7 @@ export default defineConfig({
     // },
     {
       name: 'Google Chrome',
-      use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: false },
+      use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: !!process.env.CI },
     },
   ],
 
