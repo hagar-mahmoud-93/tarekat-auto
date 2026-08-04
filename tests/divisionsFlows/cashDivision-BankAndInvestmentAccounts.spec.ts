@@ -15,7 +15,7 @@ import { DivisionType } from '../../pages/seeder.page';
 
 test.describe('Inheritance seeder', () => {
 
-  test('Cash division - Bank And Investment Accounts @smoke', async ({ seederPage, request, page: adminPage }) => {
+  test('Cash division - Bank And Investment Accounts @smoke @division @cash-division', async ({ seederPage, request, page: adminPage }) => {
     test.setTimeout(300_000); // long multi-stage flow with real backend processing between steps
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 

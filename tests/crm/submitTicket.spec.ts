@@ -12,7 +12,7 @@ test.describe('CRM complaints', () => {
   // a bad run without masking a real regression.
   test.describe.configure({ retries: 2 });
 
-  test('Beneficiary submits a new support ticket via المساعدة', async ({ seederPage, request }) => {
+  test('Beneficiary submits a new support ticket via المساعدة @crm', async ({ seederPage, request }) => {
     test.setTimeout(120_000);
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 
@@ -51,7 +51,7 @@ test.describe('CRM complaints', () => {
     await beneficiaryTab.close();
   });
 
-  test('Applicant step validates the mobile number field', async ({ seederPage, request }) => {
+  test('Applicant step validates the mobile number field @crm', async ({ seederPage, request }) => {
     test.setTimeout(60_000);
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 
@@ -98,7 +98,7 @@ test.describe('CRM complaints', () => {
     await beneficiaryTab.close();
   });
 
-  test('Ticket details step validates the التفاصيل field', async ({ seederPage, request }) => {
+  test('Ticket details step validates the التفاصيل field @crm', async ({ seederPage, request }) => {
     test.setTimeout(60_000);
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 
@@ -144,7 +144,7 @@ test.describe('CRM complaints', () => {
     await beneficiaryTab.close();
   });
 
-  test('Ticket details step validates the deceased ID and heir-enumeration deed number fields', async ({
+  test('Ticket details step validates the deceased ID and heir-enumeration deed number fields @crm', async ({
     seederPage,
     request,
   }) => {
