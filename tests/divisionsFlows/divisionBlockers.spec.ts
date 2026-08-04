@@ -35,7 +35,7 @@ test.describe('Division blockers', () => {
       await cashDivisionsPage.startDivision();
 
       await expect(cashDivisionsPage.blockerDialog()).toBeVisible();
-      await expect(cashDivisionsPage.blockerDialog()).toContainText('لا يمكنك بدء قسمة التركة نظرًا لوجود موانع قسمة');
+      await expect(cashDivisionsPage.blockerDialog()).toContainText('قاصر');
     });
   });
 
