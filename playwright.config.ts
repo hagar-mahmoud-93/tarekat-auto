@@ -14,6 +14,10 @@ import { env } from './config/env';
  */
 export default defineConfig({
   testDir: './tests',
+  /* Drop {platform} from the default template: CI (ubuntu) is the only place toHaveScreenshot()
+   * baselines actually gate anything, so a single baseline per test/arg avoids macOS-authored
+   * snapshots (suffixed -darwin) silently never matching on the ubuntu-latest runner. */
+  snapshotPathTemplate: '{snapshotDir}/{testFileDir}/{testFileName}-snapshots/{arg}-{projectName}{ext}',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

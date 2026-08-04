@@ -9,8 +9,11 @@ import { FaqPage } from '../../pages/faq.page';
  * The FAQ page is static content (no per-user or per-session data), so its content is asserted
  * via visual snapshots of FaqPage.content() rather than per-string text matching — one screenshot
  * diff catches wording/layout/category changes that a handful of toBeVisible() calls would miss.
- * First run against this suite has no baselines yet; Playwright will generate them and fail once —
- * rerun to pass, and commit the generated PNGs under tests/crm/faq.spec.ts-snapshots/.
+ * Baselines must come from the CI run (ubuntu), not a local machine — snapshotPathTemplate in
+ * playwright.config.ts has no {platform} segment, so a macOS-generated PNG never matches what
+ * ubuntu-latest renders. First CI run with no baseline yet will generate one and fail once;
+ * download it from that run's playwright-report-crm artifact and commit it under
+ * tests/crm/faq.spec.ts-snapshots/.
  */
 test.describe('CRM Help Center - FAQ', () => {
   test('FAQ content matches its visual baseline across search and expand states @crm', async ({ seederPage, request }) => {

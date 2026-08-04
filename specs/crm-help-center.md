@@ -142,8 +142,11 @@ awareness, not explored further.
   skips otherwise).
 - `tests/crm/faq.spec.ts` — beneficiary searches the FAQ (match + no-match/empty-state) and
   expands a question, asserting each state via `toHaveScreenshot()` against `FaqPage.content()`
-  rather than text matching (see FAQ row above). First run has no baseline yet — it will generate
-  the PNGs and fail once; rerun to pass, then commit `tests/crm/faq.spec.ts-snapshots/`.
+  rather than text matching (see FAQ row above). Baselines are platform-agnostic (no `{platform}`
+  in `snapshotPathTemplate`), so they must come from the CI (ubuntu) run, not a local machine — a
+  macOS-generated PNG won't match. First CI run with no baseline yet will generate one and fail
+  once; download it from that run's `playwright-report-crm` artifact and commit it under
+  `tests/crm/faq.spec.ts-snapshots/`.
 - `tests/crm/contactUs.spec.ts` — beneficiary views contact details and opens each of the three
   ناجز branch locations (جدة، الرياض، الدمام), asserting all three open Google Maps in a new tab,
   via `HelpPage` + `ContactUsPage`.
