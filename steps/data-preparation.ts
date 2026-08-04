@@ -17,9 +17,18 @@ export class DataPreparation {
   ) {}
 
   /** Seeds a case via the admin seeder, mocks it into Tawtheeq, and logs in as the beneficiary. */
-  async seedCase(divisionType?: DivisionType): Promise<SeededCase> {
+  async seedCase(
+    divisionType?: DivisionType,
+    opts?: { minorHeirIndex?: number; deadHeirIndex?: number },
+  ): Promise<SeededCase> {
     await this.seederPage.login();
     await this.seederPage.generateRandomData(divisionType);
+    if (opts?.minorHeirIndex !== undefined) {
+      await this.seederPage.markHeirAsMinor(opts.minorHeirIndex);
+    }
+    if (opts?.deadHeirIndex !== undefined) {
+      await this.seederPage.markHeirAsDead(opts.deadHeirIndex);
+    }
     const result = await this.seederPage.seedCase();
 
     const tawtheeqClient = new TawtheeqClient(this.request, env.tawtheeq.baseURL);

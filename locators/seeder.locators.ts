@@ -23,6 +23,16 @@ export class SeederLocators {
     return this.page.locator('#gen_include_investment');
   }
 
+  /** The "Minor" checkbox for the heir card at the given index (0-based). */
+  heirMinorCheckbox(heirIndex: number) {
+    return this.page.locator(`#heir_minor_${heirIndex}`);
+  }
+
+  /** The "Dead" checkbox for the heir card at the given index (0-based). */
+  heirDeadCheckbox(heirIndex: number) {
+    return this.page.locator(`#heir_dead_${heirIndex}`);
+  }
+
   seedCaseSubmit() {
     return this.page.locator('input[type=submit][value="Seed Case"]');
   }

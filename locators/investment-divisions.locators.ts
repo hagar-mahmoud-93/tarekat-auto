@@ -49,6 +49,15 @@ export class InvestmentDivisionsLocators {
     return this.page.getByRole('dialog').filter({ hasText: 'تم تقديم طلب القسمة بنجاح' });
   }
 
+  /**
+   * The dialog shown when starting the division is blocked (e.g. a minor or deceased heir).
+   * The message text varies by blocker reason, so this matches on the "العودة" back button
+   * shared by all blocker dialogs rather than a specific message.
+   */
+  blockerDialog() {
+    return this.page.getByRole('dialog').filter({ has: this.page.getByRole('button', { name: 'العودة' }) });
+  }
+
   /** The "حالة الطلب/ القسمة" status for the الموجودات الاستثمارية card in the divisions listing. */
   requestStatus() {
     return this.page.getByRole('heading', { name: 'حالة الطلب/ القسمة' }).locator('xpath=..');

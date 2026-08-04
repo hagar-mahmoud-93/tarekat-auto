@@ -65,6 +65,31 @@ export class SeederPage extends BasePage {
     await this.page.waitForTimeout(1500);
   }
 
+  /**
+   * Checks the "Minor" checkbox for the heir card at the given index (0-based).
+   * Index 0 is the applicant/beneficiary and is excluded from the seeded `heirs[]`
+   * array, so the default targets index 1, the first heir that actually appears there.
+   */
+  async markHeirAsMinor(heirIndex: number = 1) {
+    await this.page.evaluate((idx) => {
+      const cb = document.getElementById(`heir_minor_${idx}`) as HTMLInputElement | null;
+      if (cb && !cb.checked) cb.click();
+    }, heirIndex);
+  }
+
+  /**
+   * Checks the "Dead" checkbox for the heir card at the given index (0-based), leaving the
+   * Munasakhat sub-inheritance section empty (a plain, non-munasakhat case).
+   * Index 0 is the applicant/beneficiary and is excluded from the seeded `heirs[]`
+   * array, so the default targets index 1, the first heir that actually appears there.
+   */
+  async markHeirAsDead(heirIndex: number = 1) {
+    await this.page.evaluate((idx) => {
+      const cb = document.getElementById(`heir_dead_${idx}`) as HTMLInputElement | null;
+      if (cb && !cb.checked) cb.click();
+    }, heirIndex);
+  }
+
   async seedCase(): Promise<SeedResult> {
     await this.locators.seedCaseSubmit().click();
     await this.page.waitForLoadState('networkidle').catch(() => {});
