@@ -6,7 +6,7 @@ export class DivisionAdminPage extends BasePage {
   private readonly locators = new DivisionAdminLocators(this.page);
 
   async open() {
-    await this.page.goto(`${env.admin.apiURL}${env.divisionAdmin.apiURL}`);
+    await this.page.goto(`${env.admin.apiURL}${env.admin.divisionURL}`);
     await this.page.waitForLoadState('networkidle').catch(() => {});
   }
 

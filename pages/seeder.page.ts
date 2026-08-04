@@ -40,7 +40,9 @@ export class SeederPage extends BasePage {
   private readonly locators = new SeederLocators(this.page);
 
   async login(username: string = env.admin.username, password: string = env.admin.password) {
-    await this.page.goto(`${env.admin.apiURL}${env.inheritanceSeeder.apiURL}`);
+    await this.page.goto(`${env.admin.apiURL}${env.admin.inheritanceSeederURL}`);
+    // An already-authenticated session lands straight on the seeder tool with no login form to fill.
+    if (!(await this.locators.usernameInput().isVisible().catch(() => false))) return;
     await this.locators.usernameInput().fill(username);
     await this.locators.passwordInput().fill(password);
     await this.locators.loginButton().click();

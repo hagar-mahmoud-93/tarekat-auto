@@ -71,8 +71,26 @@ export default defineConfig({
     //   name: 'Microsoft Edge',
     //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
     // },
+
+    /* Runs the shared admin preconditions (settings/mocks/waffle flags) exactly once, only when
+     * a divisionsFlows test is actually part of the run — see 'divisionsFlows' dependency below. */
+    {
+      name: 'division-preconditions',
+      testDir: './tests/divisionsFlows',
+      testMatch: /.*\.setup\.ts/,
+      use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: !!process.env.CI },
+    },
+    {
+      name: 'divisionsFlows',
+      testDir: './tests/divisionsFlows',
+      testIgnore: /.*\.setup\.ts/,
+      dependencies: ['division-preconditions'],
+      use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: !!process.env.CI },
+    },
     {
       name: 'Google Chrome',
+      testDir: './tests',
+      testIgnore: /divisionsFlows[\\/]/,
       use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: !!process.env.CI },
     },
   ],
