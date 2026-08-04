@@ -6,7 +6,7 @@ import { HelpPage } from '../../pages/help.page';
 import { ContactUsPage } from '../../pages/contact-us.page';
 
 test.describe('CRM Help Center - Contact us', () => {
-  test('Beneficiary views contact details and opens a branch location', async ({ seederPage, request }) => {
+  test('Beneficiary views contact details and opens a branch location @crm', async ({ seederPage, request }) => {
     test.setTimeout(60_000);
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 

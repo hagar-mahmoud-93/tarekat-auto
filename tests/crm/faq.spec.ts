@@ -13,7 +13,7 @@ import { FaqPage } from '../../pages/faq.page';
  * rerun to pass, and commit the generated PNGs under tests/crm/faq.spec.ts-snapshots/.
  */
 test.describe('CRM Help Center - FAQ', () => {
-  test('FAQ content matches its visual baseline across search and expand states', async ({ seederPage, request }) => {
+  test('FAQ content matches its visual baseline across search and expand states @crm', async ({ seederPage, request }) => {
     test.setTimeout(60_000);
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 

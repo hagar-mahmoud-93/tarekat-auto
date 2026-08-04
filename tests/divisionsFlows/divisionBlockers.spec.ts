@@ -8,7 +8,7 @@ import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 
 test.describe('Division blockers', () => {
 
-  test('Cash division is blocked when a heir is a minor', async ({ seederPage, request }) => {
+  test('Cash division is blocked when a heir is a minor @division @cash-division', async ({ seederPage, request }) => {
     test.setTimeout(120_000);
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 
@@ -39,7 +39,7 @@ test.describe('Division blockers', () => {
     });
   });
 
-  test('Investment division is blocked when a heir is a minor', async ({ seederPage, request }) => {
+  test('Investment division is blocked when a heir is a minor @division @investment-division', async ({ seederPage, request }) => {
     test.setTimeout(120_000);
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 
@@ -70,7 +70,7 @@ test.describe('Division blockers', () => {
     });
   });
 
-  test('Cash division is blocked when a heir is dead', async ({ seederPage, request }) => {
+  test('Cash division is blocked when a heir is dead @division @cash-division', async ({ seederPage, request }) => {
     test.setTimeout(120_000);
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 
@@ -101,7 +101,7 @@ test.describe('Division blockers', () => {
     });
   });
 
-  test('Investment division is blocked when a heir is dead', async ({ seederPage, request }) => {
+  test('Investment division is blocked when a heir is dead @division @investment-division', async ({ seederPage, request }) => {
     test.setTimeout(120_000);
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 
