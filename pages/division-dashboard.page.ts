@@ -2,7 +2,7 @@ import { Page } from '@playwright/test';
 import { expect } from '../fixtures/base.fixture';
 import { BasePage } from './base.page';
 import { env } from '../config/env';
-import { TransferFundsHeirResult } from '../api/clients/cashDivisionAPIs/transfer-funds-result.client';
+import { TransferFundsHeirResult } from '../api/clients/transfer-funds-result.client';
 
 type WarithDistributionEntry = { idNumber: string; idType: number; name: string; iban: string; amount: string };
 
