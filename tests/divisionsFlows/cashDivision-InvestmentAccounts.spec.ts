@@ -1,6 +1,6 @@
 import { test, expect } from '../../fixtures/base.fixture';
 import { env } from '../../config/env';
-import { InvestmentDivisionsPage } from '../../pages/investment-divisions.page';
+import { CashDivisionsPage } from '../../pages/cash-divisions.page';
 import { DataPreparation } from '../../steps/data-preparation';
 import { DivisionsList } from '../../steps/divisions-list';
 import { HeirAcceptance } from '../../steps/heir-acceptance';
@@ -11,66 +11,74 @@ import { TarikaDistributeReqClient } from '../../api/clients/cashDivisionAPIs/ta
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 import { DivisionDashboardPage } from '../../pages/division-dashboard.page';
 import { SubmitTarikaFundsResults } from '../../steps/submit-tarika-funds-results';
-import { CmaApplicationPage } from '../../pages/cma-application.page';
+import { DivisionType } from '../../pages/seeder.page';
 
 test.describe('Inheritance seeder', () => {
 
-  test('Investment division - Transfer flow @smoke', async ({ seederPage, request, page: adminPage }) => {
+  test('Cash division - Investment Accounts @smoke', async ({ seederPage, request, page: adminPage }) => {
     test.setTimeout(300_000); // long multi-stage flow with real backend processing between steps
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
+
+    const divisionType: DivisionType = 'cashInvestmentAccounts';
 
     let result: Awaited<ReturnType<DataPreparation['seedCase']>>['result'];
     let beneficiaryTab: Awaited<ReturnType<DataPreparation['seedCase']>>['beneficiaryTab'];
     let requestsPage: Awaited<ReturnType<DivisionsList['run']>>;
-    let investmentDivisionsPage: InvestmentDivisionsPage;
+    let cashDivisionsPage: CashDivisionsPage;
     let divisionId: string;
     let divisionDashboardPage: DivisionDashboardPage;
 
     await test.step('Seed case and open the divisions listing', async () => {
       const dataPreparation = new DataPreparation(seederPage, request);
-      ({ result, beneficiaryTab } = await dataPreparation.seedCase());
+      ({ result, beneficiaryTab } = await dataPreparation.seedCase(divisionType));
 
       const divisionsList = new DivisionsList(beneficiaryTab, result);
       requestsPage = await divisionsList.run();
 
-      investmentDivisionsPage = new InvestmentDivisionsPage(beneficiaryTab);
+      cashDivisionsPage = new CashDivisionsPage(beneficiaryTab);
     });
 
     await test.step('Beneficiary starts and accepts the proposed division', async () => {
-      await investmentDivisionsPage.showAssets();
+      await cashDivisionsPage.showAssets();
       await fillMobileNumberIfPrompted(beneficiaryTab);
-      await investmentDivisionsPage.acceptDivisionAgreement();
-      await investmentDivisionsPage.startDivision();
+      await cashDivisionsPage.acceptDivisionAgreement();
+      await cashDivisionsPage.startDivision();
 
-      await investmentDivisionsPage.waitForProposedDivisionCard();
-      await investmentDivisionsPage.acceptDivisionAgreement();
-      await investmentDivisionsPage.acceptDivision();
+      await cashDivisionsPage.waitForProposedDivisionCard();
+      await cashDivisionsPage.acceptDivisionAgreement();
+      await cashDivisionsPage.acceptDivision();
 
-      await investmentDivisionsPage.closeDivisionSuccessPopup();
+      await cashDivisionsPage.closeDivisionSuccessPopup();
     });
 
     await test.step('Verify request is awaiting heirs approval', async () => {
       await requestsPage.open();
       await expect(beneficiaryTab).toHaveURL(/\/my-orders/);
+      // await expect(requestsPage.requestCard('قسمة التركة')).toContainText('قيد التنفيذ');
 
       await requestsPage.openCaseDetails();
+      // await expect(requestsPage.distributionStatus()).toContainText('بانتظار بدء القسمة');
 
       await requestsPage.openDivisionsListingTab();
-      await expect(investmentDivisionsPage.requestStatus()).toContainText('بانتظار موافقة الورثة');
+      await expect(cashDivisionsPage.requestStatus()).toContainText('بانتظار موافقة الورثة');
     });
 
     await test.step('All heirs approve the division', async () => {
-      const heirAcceptance = new HeirAcceptance(seederPage, result, InvestmentDivisionsPage);
+      const heirAcceptance = new HeirAcceptance(seederPage, result);
       await heirAcceptance.run();
 
-      await expect(async () => {
-        await requestsPage.openRequestDataTab();
-        //await expect(requestsPage.distributionStatus()).toContainText('في انتظار التدقيق', { timeout: 3000 });
-      }).toPass({ timeout: 60_000 });
+      await requestsPage.openRequestDataTab();
+      await expect(requestsPage.distributionStatus()).toContainText('في انتظار التدقيق');
 
       await requestsPage.openDivisionsListingTab();
+      // await expect(cashDivisionsPage.requestStatus()).toContainText('في انتظار التدقيق');
 
-      await investmentDivisionsPage.viewDivision();
+      await cashDivisionsPage.viewDivision();
+    });
+
+    await test.step('Verify bank account inquiry is in progress', async () => {
+      await cashDivisionsPage.openBankAccountTab();
+      await expect(cashDivisionsPage.inquiryStatus()).toContainText('قيد الاستعلام');
     });
 
     await test.step('Auditor approves the division', async () => {
@@ -78,43 +86,37 @@ test.describe('Inheritance seeder', () => {
       divisionId = await openDivisionDashboard(adminPage, result.inheritanceId);
 
       await new InheritanceActionsPage(adminPage).submitAuditorApprove(result.inheritanceId);
-
     });
 
-    await test.step('Submit Inquiry Responses', async () => {
+    await test.step('Simulate Tarika funds status and complete heir inquiries and account selection', async () => {
+      await new TarikaFundsStatusClient(request).simulate(result, divisionId, divisionType);
+
       divisionDashboardPage = new DivisionDashboardPage(adminPage);
       await divisionDashboardPage.completeHeirInqs(divisionId, result.heirsCount);
 
       for (let i = 0; i < result.heirsCount; i++) {
         await expect(divisionDashboardPage.heirInquiryFsmState(i)).not.toContainText('requested');
       }
+
+      await divisionDashboardPage.expireAccountChoosing();
     });
 
-    await test.step('Open CMA Application from the division dashboard', async () => {
-      await divisionDashboardPage.openCmaApplicationEdit();
-      await expect(adminPage).toHaveURL(/\/admin\/cma_transfer\/cmaapplication\//);
+    await test.step('Submit Tarika distribution request and settle funds', async () => {
+      await new TarikaDistributeReqClient(request).submitTarikaDistributeRequest(result, divisionId);
+
+      const submitTarikaFundsResults = new SubmitTarikaFundsResults(request, divisionDashboardPage);
+      // Tarika funds results are processed in two settlement rounds
+      await submitTarikaFundsResults.run(divisionId, result);
+      await submitTarikaFundsResults.run(divisionId, result);
     });
 
-    await test.step('Fill and save the Grouped Nafith number', async () => {
-      const cmaApplicationPage = new CmaApplicationPage(adminPage);
-      const nafithNumber = String(Date.now()).slice(-9);
-      await cmaApplicationPage.fillGroupedNafithNumber(nafithNumber);
-      await cmaApplicationPage.save();
-    });
-
-    await test.step('Verify Grouped Nafith number is populated', async () => {
+    await test.step('Verify division completes successfully', async () => {
       await divisionDashboardPage.open(divisionId);
-      await expect(divisionDashboardPage.groupedNafithNumber()).toHaveText(/^\d+$/);
-    });
 
-    await test.step('Expire portfolio collection', async () => {
-      await divisionDashboardPage.expirePortfolioCollection();
-    });
+      await expect(divisionDashboardPage.divisionStatus()).toContainText('COMPLETED');
 
-    await test.step('Simulate success for the cma.distribution_request outbox entry', async () => {
-      await divisionDashboardPage.open(divisionId);
-      await divisionDashboardPage.simulateOutboxSuccess('cma.distribution_request');
+      await expect(divisionDashboardPage.ejadaStage()).toContainText('COMPLETED');
+      await expect(divisionDashboardPage.ejadaStage()).toContainText('COMPLETED');
     });
-
   });
 });

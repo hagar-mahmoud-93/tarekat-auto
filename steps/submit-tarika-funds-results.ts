@@ -11,7 +11,7 @@ export class SubmitTarikaFundsResults {
 
   /** Fetches the current warith heirs and submits the Tarika funds transfer results for them. */
   async run(divisionId: string, result: SeedResult): Promise<void> {
-    const heirs = await this.divisionDashboardPage.getWarithHeirs(divisionId);
+    const heirs = await this.divisionDashboardPage.getWarithHeirs(divisionId, result.heirsCount);
     await new TransferFundsResultClient(this.request).submitTarikaFundsResults(
       result.json.deceased.identityNumber,
       divisionId,

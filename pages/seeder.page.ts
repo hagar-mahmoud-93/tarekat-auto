@@ -9,6 +9,11 @@ export type AssetAccount = {
   balance: string;
 };
 
+export type InvestmentAccount = {
+  accountNumber: string;
+  balance: string;
+};
+
 export type SeedCaseJson = {
   _name: string;
   deceased: { identityNumber: string; [key: string]: unknown };
@@ -17,7 +22,7 @@ export type SeedCaseJson = {
   request: { id: number; requestNumber: string };
   estateAssets: {
     bankAccounts?: AssetAccount[];
-    investmentAccounts?: AssetAccount[];
+    investments?: InvestmentAccount[];
     [key: string]: unknown;
   };
 };
@@ -27,6 +32,9 @@ export type SeedResult = {
   heirsCount: number;
   json: SeedCaseJson;
 };
+
+/** Which cash asset types the seeded case should include. */
+export type DivisionType = 'cashBankAccounts' | 'cashInvestmentAccounts' | 'cashBankInvestmentAccounts';
 
 export class SeederPage extends BasePage {
   private readonly locators = new SeederLocators(this.page);
@@ -39,11 +47,19 @@ export class SeederPage extends BasePage {
     await this.page.waitForLoadState('networkidle').catch(() => {});
   }
 
-  async generateRandomData() {
-    await this.page.evaluate(() => {
-      const cb = document.getElementById('gen_include_investment') as HTMLInputElement;
-      if (cb?.checked) cb.click();
-    });
+  async generateRandomData(divisionType?: DivisionType) {
+    await this.page.evaluate((divisionType) => {
+      const uncheck = (id: string) => {
+        const cb = document.getElementById(id) as HTMLInputElement | null;
+        if (cb?.checked) cb.click();
+      };
+
+      if (divisionType === 'cashInvestmentAccounts') {
+        uncheck('gen_include_bank');
+      } else if (divisionType == 'cashBankAccounts') {
+        uncheck('gen_include_investment');
+      }
+    }, divisionType);
     await this.locators.generateRandomDataButton().click();
     // The fill is async client-side JS; give it time to populate before submitting.
     await this.page.waitForTimeout(1500);

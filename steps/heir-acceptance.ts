@@ -6,6 +6,7 @@ import { fillMobileNumberIfPrompted } from './fill-mobile-number';
 
 type DivisionPage = {
   viewDivision(): Promise<void>;
+  waitForProposedDivisionCard(): Promise<void>;
   acceptDivisionAgreement(): Promise<void>;
   acceptDivision(): Promise<void>;
 };
@@ -34,6 +35,7 @@ export class HeirAcceptance {
 
       const divisionPage = new this.DivisionPage(heirTab);
       await divisionPage.viewDivision();
+      await divisionPage.waitForProposedDivisionCard();
       await divisionPage.acceptDivisionAgreement();
       await divisionPage.acceptDivision();
 
