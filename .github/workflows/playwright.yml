@@ -10,6 +10,21 @@ on:
   # the full set. No label runs the full suite.
   repository_dispatch:
     types: [run-tests]
+  # Manual trigger from the Actions tab — "Use workflow from" gives the branch picker for free;
+  # this input adds a suite picker alongside it.
+  workflow_dispatch:
+    inputs:
+      label:
+        description: 'Test suite to run'
+        required: true
+        type: choice
+        default: full
+        options:
+          - full
+          - division
+          - cash-division
+          - investment-division
+          - nafith-login
 jobs:
   test:
     timeout-minutes: 60
@@ -26,8 +41,9 @@ jobs:
     - name: Run Playwright tests
       env:
         # Kept out of the `run:` template and passed as an env var so an untrusted caller can't
-        # inject shell syntax through client_payload.label.
-        TEST_LABEL: ${{ github.event.client_payload.label }}
+        # inject shell syntax through client_payload.label. workflow_dispatch's own dropdown is
+        # already restricted to known values, but this keeps both trigger paths on one code path.
+        TEST_LABEL: ${{ github.event.client_payload.label || (inputs.label != 'full' && inputs.label) }}
       run: |
         if [ -n "$TEST_LABEL" ]; then
           if [[ ! "$TEST_LABEL" =~ ^[a-z0-9-]+$ ]]; then
