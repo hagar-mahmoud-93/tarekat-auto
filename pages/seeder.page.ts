@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import { BasePage } from './base.page';
 import { env } from '../config/env';
-import { SeederLocators } from '../locators/seeder.locators';
+import { SeederLocators } from '../locators/admin-dashboard-locators/seeder.locators';
 
 export type AssetAccount = {
   iban: string;
@@ -40,7 +40,9 @@ export class SeederPage extends BasePage {
   private readonly locators = new SeederLocators(this.page);
 
   async login(username: string = env.admin.username, password: string = env.admin.password) {
-    await this.page.goto(`${env.admin.apiURL}${env.inheritanceSeeder.apiURL}`);
+    await this.page.goto(`${env.admin.apiURL}${env.admin.inheritanceSeederURL}`);
+    // An already-authenticated session lands straight on the seeder tool with no login form to fill.
+    if (!(await this.locators.usernameInput().isVisible().catch(() => false))) return;
     await this.locators.usernameInput().fill(username);
     await this.locators.passwordInput().fill(password);
     await this.locators.loginButton().click();
@@ -63,6 +65,31 @@ export class SeederPage extends BasePage {
     await this.locators.generateRandomDataButton().click();
     // The fill is async client-side JS; give it time to populate before submitting.
     await this.page.waitForTimeout(1500);
+  }
+
+  /**
+   * Checks the "Minor" checkbox for the heir card at the given index (0-based).
+   * Index 0 is the applicant/beneficiary and is excluded from the seeded `heirs[]`
+   * array, so the default targets index 1, the first heir that actually appears there.
+   */
+  async markHeirAsMinor(heirIndex: number = 1) {
+    await this.page.evaluate((idx) => {
+      const cb = document.getElementById(`heir_minor_${idx}`) as HTMLInputElement | null;
+      if (cb && !cb.checked) cb.click();
+    }, heirIndex);
+  }
+
+  /**
+   * Checks the "Dead" checkbox for the heir card at the given index (0-based), leaving the
+   * Munasakhat sub-inheritance section empty (a plain, non-munasakhat case).
+   * Index 0 is the applicant/beneficiary and is excluded from the seeded `heirs[]`
+   * array, so the default targets index 1, the first heir that actually appears there.
+   */
+  async markHeirAsDead(heirIndex: number = 1) {
+    await this.page.evaluate((idx) => {
+      const cb = document.getElementById(`heir_dead_${idx}`) as HTMLInputElement | null;
+      if (cb && !cb.checked) cb.click();
+    }, heirIndex);
   }
 
   async seedCase(): Promise<SeedResult> {

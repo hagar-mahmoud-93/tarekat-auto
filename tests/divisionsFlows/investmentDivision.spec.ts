@@ -1,22 +1,22 @@
 import { test, expect } from '../../fixtures/base.fixture';
 import { env } from '../../config/env';
-import { InvestmentDivisionsPage } from '../../pages/investment-divisions.page';
+import { InvestmentDivisionsPage } from '../../pages/division-pages/investment-divisions.page';
 import { DataPreparation } from '../../steps/data-preparation';
 import { DivisionsList } from '../../steps/divisions-list';
 import { HeirAcceptance } from '../../steps/heir-acceptance';
 import { openDivisionDashboard } from '../../steps/open-division-dashboard';
-import { InheritanceActionsPage } from '../../pages/inheritance-actions.page';
-import { TarikaFundsStatusClient } from '../../api/clients/cashDivisionAPIs/tarika-funds-status.client';
-import { TarikaDistributeReqClient } from '../../api/clients/cashDivisionAPIs/tarika-distribute-req.client';
+import { AuditorApprovalPage } from '../../pages/division-pages/auditor-approval.page';
+import { TarikaFundsStatusClient } from '../../api/clients/tarika-funds-status.client';
+import { TarikaDistributeReqClient } from '../../api/clients/tarika-distribute-req.client';
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
-import { DivisionDashboardPage } from '../../pages/division-dashboard.page';
+import { DivisionDashboardPage } from '../../pages/division-pages/division-dashboard.page';
 import { SubmitTarikaFundsResults } from '../../steps/submit-tarika-funds-results';
 import { CmaApplicationPage } from '../../pages/cma-application.page';
 import { CmaHeirTransferClient } from '../../api/clients/cma-heir-transfer.client';
 
 test.describe('Inheritance seeder', () => {
 
-  test('Investment division - Transfer flow @smoke', async ({ seederPage, request, page: adminPage }) => {
+  test('Investment division - Transfer flow @smoke @division @investment-division', async ({ seederPage, request, page: adminPage }) => {
     test.setTimeout(420_000); // long multi-stage flow with real backend processing between steps
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 
@@ -79,7 +79,7 @@ test.describe('Inheritance seeder', () => {
       await adminPage.bringToFront();
       divisionId = await openDivisionDashboard(adminPage, result.inheritanceId);
 
-      await new InheritanceActionsPage(adminPage).submitAuditorApprove(result.inheritanceId);
+      await new AuditorApprovalPage(adminPage).submitAuditorApprove(result.inheritanceId);
 
     });
 

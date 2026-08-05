@@ -15,12 +15,11 @@ export const env = {
     apiURL: process.env.ADMIN_API_URL ?? 'https://ops-merath.api.azm-dev.com/admin/',
     username: process.env.ADMIN_USERNAME ?? 'root',
     password: process.env.ADMIN_PASSWORD ?? 'root@001',
-  },
-  inheritanceSeeder: {
-    apiURL: process.env.InheritanceSeeder_API_URL ?? '/inheritance_seeder/inheritanceseeder/seed/',
-  },
-  divisionAdmin: {
-    apiURL: process.env.DIVISION_ADMIN_API_URL ?? '/division_v2/division/',
+    divisionURL: process.env.DIVISION_ADMIN_API_URL ?? '/division_v2/division/',
+    settingsURL: process.env.INHERITANCE_SETTINGS_API_URL ?? '/inheritance/settings/8/change/?_changelist_filters=all%3D',
+    inheritanceSeederURL: process.env.InheritanceSeeder_API_URL ?? '/inheritance_seeder/inheritanceseeder/seed/',
+    configurationsServiceURL: process.env.CONFIGURATIONS_SERVICE_API_URL ?? '/configurations/service/',
+    waffleFlagURL: process.env.WAFFLE_FLAG_API_URL ?? '/waffle/flag/',
   },
   tawtheeq: {
     baseURL: process.env.TAWTHEEQ_BASE_URL ?? 'https://preprod-mocks.azm-dev.com',

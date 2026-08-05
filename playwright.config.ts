@@ -14,16 +14,23 @@ import { env } from './config/env';
  */
 export default defineConfig({
   testDir: './tests',
+  /* Drop {platform} from the default template: CI (ubuntu) is the only place toHaveScreenshot()
+   * baselines actually gate anything, so a single baseline per test/arg avoids macOS-authored
+   * snapshots (suffixed -darwin) silently never matching on the ubuntu-latest runner. */
+  snapshotPathTemplate: '{snapshotDir}/{testFileDir}/{testFileName}-snapshots/{arg}-{projectName}{ext}',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  /* Use half the runner's cores on CI instead of forcing a single worker, so fullyParallel
+   * actually runs test files concurrently there too. */
+  workers: process.env.CI ? '50%' : undefined,
+  /* Reporter to use. See https://playwright.dev/docs/test-reporters
+   * On CI: 'list' prints live per-test pass/fail to the raw Action log (silent otherwise with
+   * just 'html'), 'github' turns failures into inline annotations on the PR/Checks page. */
+  reporter: process.env.CI ? [['list'], ['github'], ['html']] : 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
@@ -68,9 +75,27 @@ export default defineConfig({
     //   name: 'Microsoft Edge',
     //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
     // },
+
+    /* Runs the shared admin preconditions (settings/mocks/waffle flags) exactly once, only when
+     * a divisionsFlows test is actually part of the run — see 'divisionsFlows' dependency below. */
+    {
+      name: 'division-preconditions',
+      testDir: './tests/divisionsFlows',
+      testMatch: /.*\.setup\.ts/,
+      use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: !!process.env.CI },
+    },
+    {
+      name: 'divisionsFlows',
+      testDir: './tests/divisionsFlows',
+      testIgnore: /.*\.setup\.ts/,
+      dependencies: ['division-preconditions'],
+      use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: !!process.env.CI },
+    },
     {
       name: 'Google Chrome',
-      use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: false },
+      testDir: './tests',
+      testIgnore: /divisionsFlows[\\/]/,
+      use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: !!process.env.CI },
     },
   ],
 

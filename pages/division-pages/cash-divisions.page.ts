@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
-import { BasePage } from './base.page';
-import { CashDivisionsLocators } from '../locators/cash-divisions.locators';
+import { BasePage } from '../base.page';
+import { CashDivisionsLocators } from '../../locators/ui-division-locators/cash-divisions.locators';
 
 export class CashDivisionsPage extends BasePage {
   private readonly locators = new CashDivisionsLocators(this.page);
@@ -55,6 +55,11 @@ export class CashDivisionsPage extends BasePage {
   /** The "حالة الطلب/ القسمة" status for the الأموال النقدية card in the divisions listing. */
   requestStatus() {
     return this.locators.requestStatus();
+  }
+
+  /** The dialog shown when starting the division is blocked (e.g. a minor heir). */
+  blockerDialog() {
+    return this.locators.blockerDialog();
   }
 
   /** Opens the الحساب البنكي tab, then waits for the inquiry status heading to appear. */

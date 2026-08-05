@@ -1,5 +1,5 @@
-import { BasePage } from './base.page';
-import { InvestmentDivisionsLocators } from '../locators/investment-divisions.locators';
+import { BasePage } from '../base.page';
+import { InvestmentDivisionsLocators } from '../../locators/ui-division-locators/investment-divisions.locators';
 
 export class InvestmentDivisionsPage extends BasePage {
   private readonly locators = new InvestmentDivisionsLocators(this.page);
@@ -54,5 +54,10 @@ export class InvestmentDivisionsPage extends BasePage {
   /** The "حالة الطلب/ القسمة" status for the الموجودات الاستثمارية card in the divisions listing. */
   requestStatus() {
     return this.locators.requestStatus();
+  }
+
+  /** The dialog shown when starting the division is blocked (e.g. a minor heir). */
+  blockerDialog() {
+    return this.locators.blockerDialog();
   }
 }

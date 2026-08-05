@@ -1,12 +1,12 @@
-import { BasePage } from './base.page';
-import { env } from '../config/env';
-import { DivisionAdminLocators } from '../locators/division-admin.locators';
+import { BasePage } from '../base.page';
+import { env } from '../../config/env';
+import { DivisionAdminLocators } from '../../locators/admin-division-locators/division-admin.locators';
 
 export class DivisionAdminPage extends BasePage {
   private readonly locators = new DivisionAdminLocators(this.page);
 
   async open() {
-    await this.page.goto(`${env.admin.apiURL}${env.divisionAdmin.apiURL}`);
+    await this.page.goto(`${env.admin.apiURL}${env.admin.divisionURL}`);
     await this.page.waitForLoadState('networkidle').catch(() => {});
   }
 

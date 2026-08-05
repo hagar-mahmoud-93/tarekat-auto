@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test';
-import { DivisionAdminPage } from '../pages/division-admin.page';
+import { DivisionAdminPage } from '../pages/division-pages/division-admin.page';
 
 export async function openDivisionDashboard(adminPage: Page, inheritanceId: string): Promise<string> {
   const divisionAdminPage = new DivisionAdminPage(adminPage);
