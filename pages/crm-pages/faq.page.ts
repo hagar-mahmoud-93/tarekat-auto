@@ -6,14 +6,19 @@ export class FaqPage extends BasePage {
   private readonly locators = new FaqLocators(this.page);
 
   /**
-   * The list filters client-side on a debounce with no loading indicator, so this waits until the
-   * visible question count changes (or the no-results empty state appears) before returning —
-   * otherwise callers can act (or screenshot) on the stale, unfiltered list.
+   * The search box is debounced but backed by a real GET /api/v1/faqs/?search= request (not a
+   * client-side filter, despite appearances) - waiting on the visible question count/no-results
+   * state alone races that request and can resolve on a transient loading frame. Wait for the
+   * response itself first, then let the resulting re-render settle.
    */
   async search(term: string) {
     const initialCount = await this.locators.questionButtons().count();
 
+    const responsePromise = this.page.waitForResponse(
+      (response) => response.url().includes('/api/v1/faqs/') && response.request().method() === 'GET',
+    );
     await this.locators.searchInput().fill(term);
+    await responsePromise;
 
     await expect(async () => {
       const changed = (await this.locators.questionButtons().count()) !== initialCount;
