@@ -9,13 +9,18 @@ export class FaqPage extends BasePage {
    * The search box is debounced but backed by a real GET /api/v1/faqs/?search= request (not a
    * client-side filter, despite appearances) - waiting on the visible question count/no-results
    * state alone races that request and can resolve on a transient loading frame. Wait for the
-   * response itself first, then let the resulting re-render settle.
+   * response to *this* term specifically (not just any /api/v1/faqs/ response) - a generic match
+   * can resolve on a stale in-flight response left over from a previous search() call.
    */
   async search(term: string) {
     const initialCount = await this.locators.questionButtons().count();
 
+    const encodedTerm = encodeURIComponent(term);
     const responsePromise = this.page.waitForResponse(
-      (response) => response.url().includes('/api/v1/faqs/') && response.request().method() === 'GET',
+      (response) =>
+        response.url().includes('/api/v1/faqs/') &&
+        response.url().includes(encodedTerm) &&
+        response.request().method() === 'GET',
     );
     await this.locators.searchInput().fill(term);
     await responsePromise;
