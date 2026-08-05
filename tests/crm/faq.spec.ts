@@ -2,8 +2,8 @@ import { test, expect } from '../../fixtures/base.fixture';
 import { env } from '../../config/env';
 import { DataPreparation } from '../../steps/data-preparation';
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
-import { HelpPage } from '../../pages/help.page';
-import { FaqPage } from '../../pages/faq.page';
+import { HelpPage } from '../../pages/crm-pages/help.page';
+import { FaqPage } from '../../pages/crm-pages/faq.page';
 
 /**
  * The FAQ page is static content (no per-user or per-session data), so its content is asserted

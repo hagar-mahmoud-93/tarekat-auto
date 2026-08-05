@@ -1,6 +1,6 @@
-import { BasePage } from './base.page';
-import { env } from '../config/env';
-import { WaffleFlagsLocators } from '../locators/waffle-flags.locators';
+import { BasePage } from '../base.page';
+import { env } from '../../config/env';
+import { WaffleFlagsLocators } from '../../locators/admin-dashboard-locators/waffle-flags.locators';
 
 export class WaffleFlagsPage extends BasePage {
   private readonly locators = new WaffleFlagsLocators(this.page);

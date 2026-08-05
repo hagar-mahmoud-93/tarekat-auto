@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 
-export class InheritanceActionsLocators {
+export class AuditorApprovalLocators {
   constructor(private readonly page: Page) {}
 
   auditorStatusSelect() {

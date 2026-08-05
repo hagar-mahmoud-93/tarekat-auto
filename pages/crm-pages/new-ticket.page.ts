@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
-import { BasePage } from './base.page';
-import { NewTicketLocators } from '../locators/help-center.locators';
+import { BasePage } from '../base.page';
+import { NewTicketLocators } from '../../locators/help-center.locators';
 
 export class NewTicketPage extends BasePage {
   private readonly locators = new NewTicketLocators(this.page);

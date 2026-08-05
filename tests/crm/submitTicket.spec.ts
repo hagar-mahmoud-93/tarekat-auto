@@ -2,8 +2,8 @@ import { test, expect } from '../../fixtures/base.fixture';
 import { env } from '../../config/env';
 import { DataPreparation } from '../../steps/data-preparation';
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
-import { HelpPage } from '../../pages/help.page';
-import { NewTicketPage } from '../../pages/new-ticket.page';
+import { HelpPage } from '../../pages/crm-pages/help.page';
+import { NewTicketPage } from '../../pages/crm-pages/new-ticket.page';
 
 test.describe('CRM complaints', () => {
   // These flows go through the verify-applicant/Dynamics-CRM proxy (see specs/crm-help-center.md,

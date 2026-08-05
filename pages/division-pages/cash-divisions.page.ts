@@ -1,11 +1,12 @@
-import { BasePage } from './base.page';
-import { InvestmentDivisionsLocators } from '../locators/investment-divisions.locators';
+import { expect } from '@playwright/test';
+import { BasePage } from '../base.page';
+import { CashDivisionsLocators } from '../../locators/ui-division-locators/cash-divisions.locators';
 
-export class InvestmentDivisionsPage extends BasePage {
-  private readonly locators = new InvestmentDivisionsLocators(this.page);
+export class CashDivisionsPage extends BasePage {
+  private readonly locators = new CashDivisionsLocators(this.page);
 
-  /** In the "الموجودات الاستثمارية" card, views the assets ("عرض الأصول"), then waits for the agreement checkbox to appear. */
-  async showAssets() {
+  /** In the "الأموال النقدية" card, views the assets ("عرض الأصول"), then waits for the agreement checkbox to appear. */
+   async showAssets() {
     await this.locators.showAssetsButton().click();
     await this.page.waitForLoadState('networkidle').catch(() => {});
   }
@@ -26,14 +27,14 @@ export class InvestmentDivisionsPage extends BasePage {
     await this.locators.startDivisionButton().click();
     await this.page.waitForLoadState('networkidle').catch(() => {});
   }
-
-  /** In the "الموجودات الاستثمارية" card, views the division ("عرض القسمة"), then waits for the "موافق" button to appear. */
+  
+  /** In the "الأموال النقدية" card, views the division ("عرض القسمة"), then waits for the "موافق" button to appear. */
   async viewDivision() {
     await this.locators.viewDivisionButton().click();
     await this.page.waitForLoadState('networkidle').catch(() => {});
   }
 
-  /** Confirms with "الموافقة على القسمة" to accept the proposed division, then waits for the success popup's close icon to appear. */
+  /** Confirms with "موافق" to start the division, then waits for the success popup's close icon to appear. */
   async acceptDivision() {
     const button = this.locators.acceptDivisionButton();
     // The button stays disabled until the القسمة المقترحة tab's data finishes loading, which can be slow.
@@ -51,7 +52,7 @@ export class InvestmentDivisionsPage extends BasePage {
     await this.page.waitForLoadState('networkidle').catch(() => {});
   }
 
-  /** The "حالة الطلب/ القسمة" status for the الموجودات الاستثمارية card in the divisions listing. */
+  /** The "حالة الطلب/ القسمة" status for the الأموال النقدية card in the divisions listing. */
   requestStatus() {
     return this.locators.requestStatus();
   }
@@ -59,5 +60,16 @@ export class InvestmentDivisionsPage extends BasePage {
   /** The dialog shown when starting the division is blocked (e.g. a minor heir). */
   blockerDialog() {
     return this.locators.blockerDialog();
+  }
+
+  /** Opens the الحساب البنكي tab, then waits for the inquiry status heading to appear. */
+  async openBankAccountTab() {
+    await this.locators.bankAccountTab().click();
+    await this.page.waitForLoadState('networkidle').catch(() => {});
+  }
+
+  /** The "حالة الاستعلام" inquiry status in the الحساب البنكي tab. */
+  inquiryStatus() {
+    return this.locators.inquiryStatus();
   }
 }

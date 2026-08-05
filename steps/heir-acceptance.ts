@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import { SeederPage, SeedResult } from '../pages/seeder.page';
-import { RequestsPage } from '../pages/requests.page';
-import { CashDivisionsPage } from '../pages/cash-divisions.page';
+import { RequestsPage } from '../pages/division-pages/requests.page';
+import { CashDivisionsPage } from '../pages/division-pages/cash-divisions.page';
 import { fillMobileNumberIfPrompted } from './fill-mobile-number';
 
 type DivisionPage = {

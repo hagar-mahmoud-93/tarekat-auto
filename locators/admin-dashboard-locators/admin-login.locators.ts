@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 
-export class AdminSettingsLocators {
+export class AdminLoginLocators {
   constructor(private readonly page: Page) {}
 
   usernameInput() {
@@ -13,13 +13,5 @@ export class AdminSettingsLocators {
 
   loginButton() {
     return this.page.getByRole('button', { name: 'Log in' });
-  }
-
-  valueInput() {
-    return this.page.locator('#id_value');
-  }
-
-  saveButton() {
-    return this.page.locator('input[type=submit][value="Save"]');
   }
 }
