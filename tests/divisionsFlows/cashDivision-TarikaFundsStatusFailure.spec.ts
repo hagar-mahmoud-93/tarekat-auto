@@ -1,11 +1,11 @@
 import { test, expect } from '../../fixtures/base.fixture';
 import { env } from '../../config/env';
-import { CashDivisionsPage } from '../../pages/cash-divisions.page';
+import { CashDivisionsPage } from '../../pages/division-pages/cash-divisions.page';
 import { DataPreparation } from '../../steps/data-preparation';
 import { DivisionsList } from '../../steps/divisions-list';
 import { HeirAcceptance } from '../../steps/heir-acceptance';
 import { openDivisionDashboard } from '../../steps/open-division-dashboard';
-import { InheritanceActionsPage } from '../../pages/inheritance-actions.page';
+import { AuditorApprovalPage } from '../../pages/division-pages/auditor-approval.page';
 import { TarikaFundsStatusClient } from '../../api/clients/tarika-funds-status.client';
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 import { DivisionType } from '../../pages/seeder.page';
@@ -78,7 +78,7 @@ test.describe('Inheritance seeder', () => {
         const adminActionsPage = await adminPage.context().newPage();
         divisionId = await openDivisionDashboard(adminActionsPage, result.inheritanceId);
 
-        await new InheritanceActionsPage(adminActionsPage).submitAuditorApprove(result.inheritanceId);
+        await new AuditorApprovalPage(adminActionsPage).submitAuditorApprove(result.inheritanceId);
       });
 
       await test.step('All heirs approve the division', async () => {
