@@ -146,6 +146,64 @@ export class DivisionDashboardPage extends BasePage {
     return this.cmaApplicationMetaItem('Grouped Nafith').locator('.value');
   }
 
+  /** The "Grouped MsgId (CRN)" value in the CMA Application section — the MsgId used by the cma-heir-transfer callback. */
+  groupedMsgId() {
+    return this.cmaApplicationMetaItem('Grouped MsgId').locator('.value');
+  }
+
+  private heirCollectionsTable() {
+    return this.page.locator('h3', { hasText: 'Heir Collections' }).locator('xpath=following::table[1]');
+  }
+
+  private async heirCollectionsColumnIndex(headerLabel: string): Promise<number> {
+    const headers = await this.heirCollectionsTable().locator('thead th').allInnerTexts();
+    const index = headers.findIndex((header) => header.trim().toUpperCase() === headerLabel.toUpperCase());
+    if (index === -1) {
+      throw new Error(`Column "${headerLabel}" not found in Heir Collections table. Headers: ${headers.join(', ')}`);
+    }
+
+    return index;
+  }
+
+  /**
+   * Reads the "Social ID", "Heir Name" and "Chosen Portfolio" columns from the "Heir Collections"
+   * table, in row order — used as the cma-heir-transfer HeirId, HeirName and HeirPortfolioNumber
+   * for each heir.
+   */
+  async getHeirCollections(): Promise<{ socialId: string; heirName: string; chosenPortfolio: string }[]> {
+    const table = this.heirCollectionsTable();
+    const headerCount = await table.locator('thead th').count();
+
+    const [socialIdColumn, heirNameColumn, chosenPortfolioColumn] = await Promise.all([
+      this.heirCollectionsColumnIndex('Social ID'),
+      this.heirCollectionsColumnIndex('Heir Name'),
+      this.heirCollectionsColumnIndex('Chosen Portfolio'),
+    ]);
+
+    const rows = table.locator('tbody tr');
+    const rowCount = await rows.count();
+
+    const entries: { socialId: string; heirName: string; chosenPortfolio: string }[] = [];
+    for (let i = 0; i < rowCount; i++) {
+      const row = rows.nth(i);
+      const cells = row.locator('td');
+      const cellCount = await cells.count();
+      // Each heir row is followed by a collapsible "Attempts" detail row rendered as a single
+      // full-width cell — skip anything that isn't a full data row instead of treating it as
+      // malformed.
+      if (cellCount !== headerCount) continue;
+
+      const [socialId, heirName, chosenPortfolio] = await Promise.all([
+        cells.nth(socialIdColumn).innerText(),
+        cells.nth(heirNameColumn).innerText(),
+        cells.nth(chosenPortfolioColumn).innerText(),
+      ]);
+      entries.push({ socialId: socialId.trim(), heirName: heirName.trim(), chosenPortfolio: chosenPortfolio.trim() });
+    }
+
+    return entries;
+  }
+
   private warithDistributionsTable() {
     return this.page.locator('h3', { hasText: 'Warith Distributions' }).locator('xpath=following::table[1]');
   }

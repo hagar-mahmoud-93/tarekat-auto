@@ -27,4 +27,8 @@ export const env = {
     accessToken: process.env.TAWTHEEQ_ACCESS_TOKEN ?? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg0NDQ2NDAwLCJpYXQiOjE3ODQ0NDU1MDAsImp0aSI6ImVkZTUxM2EwNDg2MzRkNTNiODk4MzM2OWRkZDAwYjY4IiwidXNlcl9pZCI6IjExMDgifQ.gPLGTr52eJUwdeAb09t3LSA9DiBBy1o8-e5rDUvlpoU',
     refreshToken: process.env.TAWTHEEQ_REFRESH_TOKEN ?? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4NDQ1MDkwMCwiaWF0IjoxNzg0NDQ1NTAwLCJqdGkiOiI0NmFjYTc3MjRlYTM0YTM2OGE1NGE4NDdjZDMzYzYyYiIsInVzZXJfaWQiOiIxMTA4In0.nI7-YOquqIDbkov7arCQY4s0T3KwaxBaOQ7K9dn55-c',
   },
+  cmaHeirTransfer: {
+    baseURL: process.env.CMA_HEIR_TRANSFER_BASE_URL ?? 'https://ops-merath.api.azm-dev.com',
+    accessToken: process.env.CMA_HEIR_TRANSFER_ACCESS_TOKEN ?? '',
+  },
 };

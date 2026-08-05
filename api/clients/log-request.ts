@@ -9,7 +9,7 @@ function redactHeaders(headers: Record<string, string>): Record<string, string> 
   );
 }
 
-function toCurl(method: string, url: string, headers: Record<string, string>, body?: unknown): string {
+export function toCurl(method: string, url: string, headers: Record<string, string>, body?: unknown): string {
   const headerFlags = Object.entries(redactHeaders(headers))
     .map(([key, value]) => `-H '${key}: ${value}'`)
     .join(' ');

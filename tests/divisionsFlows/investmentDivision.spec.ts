@@ -12,11 +12,12 @@ import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 import { DivisionDashboardPage } from '../../pages/division-dashboard.page';
 import { SubmitTarikaFundsResults } from '../../steps/submit-tarika-funds-results';
 import { CmaApplicationPage } from '../../pages/cma-application.page';
+import { CmaHeirTransferClient } from '../../api/clients/cma-heir-transfer.client';
 
 test.describe('Inheritance seeder', () => {
 
   test('Investment division - Transfer flow @smoke', async ({ seederPage, request, page: adminPage }) => {
-    test.setTimeout(300_000); // long multi-stage flow with real backend processing between steps
+    test.setTimeout(420_000); // long multi-stage flow with real backend processing between steps
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 
     let result: Awaited<ReturnType<DataPreparation['seedCase']>>['result'];
@@ -25,6 +26,7 @@ test.describe('Inheritance seeder', () => {
     let investmentDivisionsPage: InvestmentDivisionsPage;
     let divisionId: string;
     let divisionDashboardPage: DivisionDashboardPage;
+    let nafithNumber: string;
 
     await test.step('Seed case and open the divisions listing', async () => {
       const dataPreparation = new DataPreparation(seederPage, request);
@@ -90,6 +92,19 @@ test.describe('Inheritance seeder', () => {
       }
     });
 
+
+    await test.step('Expire portfolio collection', async () => {
+      await divisionDashboardPage.expirePortfolioCollection();
+    });
+
+    await adminPage.reload();
+    await adminPage.waitForLoadState('networkidle').catch(() => {});
+
+    await test.step('Simulate success for the cma.distribution_request outbox entry', async () => {
+      await divisionDashboardPage.open(divisionId);
+      await divisionDashboardPage.simulateOutboxSuccess('cma.distribution_request');
+    });
+
     await test.step('Open CMA Application from the division dashboard', async () => {
       await divisionDashboardPage.openCmaApplicationEdit();
       await expect(adminPage).toHaveURL(/\/admin\/cma_transfer\/cmaapplication\//);
@@ -97,23 +112,56 @@ test.describe('Inheritance seeder', () => {
 
     await test.step('Fill and save the Grouped Nafith number', async () => {
       const cmaApplicationPage = new CmaApplicationPage(adminPage);
-      const nafithNumber = String(Date.now()).slice(-9);
+      nafithNumber = String(Date.now()).slice(-9);
       await cmaApplicationPage.fillGroupedNafithNumber(nafithNumber);
       await cmaApplicationPage.save();
     });
 
-    await test.step('Verify Grouped Nafith number is populated', async () => {
+
+  await test.step('Verify Grouped Nafith number is populated', async () => {
       await divisionDashboardPage.open(divisionId);
       await expect(divisionDashboardPage.groupedNafithNumber()).toHaveText(/^\d+$/);
     });
 
-    await test.step('Expire portfolio collection', async () => {
-      await divisionDashboardPage.expirePortfolioCollection();
-    });
+    await test.step('Submit the cma-heir-transfer callback', async () => {
+      const groupedMsgId = await divisionDashboardPage.groupedMsgId().innerText();
+      const heirCollections = await divisionDashboardPage.getHeirCollections();
+      const replyDate = new Date().toISOString().slice(0, 10);
 
-    await test.step('Simulate success for the cma.distribution_request outbox entry', async () => {
-      await divisionDashboardPage.open(divisionId);
-      await divisionDashboardPage.simulateOutboxSuccess('cma.distribution_request');
+      const cmaHeirTransferClient = new CmaHeirTransferClient(request);
+      const { response, curl } = await cmaHeirTransferClient.submitInheritanceDistributionResult(
+        {
+          APsReplies: [
+            {
+              APNumber: '97',
+              ReplyDate: replyDate,
+              Heirs: heirCollections.map((heir) => ({
+                HeirId: heir.socialId,
+                HeirName: heir.heirName,
+                HeirPortfolioNumber: heir.chosenPortfolio,
+                InvestmentPortfolios: [
+                  {
+                    PortfolioNumber: heir.chosenPortfolio,
+                    ShareQuantity: '3.00',
+                    CompanyName: 'شركة أرامكو السعودية',
+                    IsTransfered: 'true',
+                    CompanyCode: '2222',
+                  },
+                ],
+              })),
+            },
+          ],
+          ReplyDate: replyDate,
+          EdaaReply: { ReplyDate: replyDate },
+          ReplyStatus: '2',
+          NafithNumber: nafithNumber,
+          InqueryResults: { APReply: [] },
+        },
+        groupedMsgId,
+      );
+      console.log('[Submit the cma-heir-transfer callback] Request curl:', curl);
+      console.log('[Submit the cma-heir-transfer callback] Response status:', response.status());
+      console.log('[Submit the cma-heir-transfer callback] Response body:', await response.text());
     });
 
   });
