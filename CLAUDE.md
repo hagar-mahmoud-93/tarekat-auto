@@ -32,6 +32,10 @@ No npm scripts defined yet — run Playwright directly, e.g. `npx playwright tes
   full area map — beneficiary Help Center pages, the new-ticket wizard, how to get a logged-in
   beneficiary session without Nafath (seeder → "Login as User"), the Django admin `ticketing` /
   `support_dashboard` apps, and a known verify-applicant/Dynamics-CRM connectivity issue.
+- **Cash division** (`tests/divisionsFlows/`, "الأموال النقدية"): see `specs/cash-division.md`
+  for the full area map — seeding a case with a given asset mix/heir mutation, the beneficiary
+  → all-heirs → auditor → Tarika funds-status/settlement flow, division blockers (minor/dead
+  heir), and a checklist for adding new cases.
 
 ## Conventions
 
