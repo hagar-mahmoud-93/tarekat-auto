@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
-import { BasePage } from './base.page';
-import { CashDivisionsLocators } from '../locators/cash-divisions.locators';
+import { BasePage } from '../base.page';
+import { CashDivisionsLocators } from '../../locators/ui-division-locators/cash-divisions.locators';
 
 export class CashDivisionsPage extends BasePage {
   private readonly locators = new CashDivisionsLocators(this.page);

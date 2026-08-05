@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
-import { BasePage } from './base.page';
-import { FaqLocators } from '../locators/help-center.locators';
+import { BasePage } from '../base.page';
+import { FaqLocators } from '../../locators/help-center.locators';
 
 export class FaqPage extends BasePage {
   private readonly locators = new FaqLocators(this.page);

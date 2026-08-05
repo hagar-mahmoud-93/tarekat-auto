@@ -1,5 +1,5 @@
-import { BasePage } from './base.page';
-import { InvestmentDivisionsLocators } from '../locators/investment-divisions.locators';
+import { BasePage } from '../base.page';
+import { InvestmentDivisionsLocators } from '../../locators/ui-division-locators/investment-divisions.locators';
 
 export class InvestmentDivisionsPage extends BasePage {
   private readonly locators = new InvestmentDivisionsLocators(this.page);

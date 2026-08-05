@@ -1,6 +1,6 @@
-import { BasePage } from './base.page';
-import { env } from '../config/env';
-import { ConfigurationsServiceLocators } from '../locators/configurations-service.locators';
+import { BasePage } from '../base.page';
+import { env } from '../../config/env';
+import { ConfigurationsServiceLocators } from '../../locators/admin-dashboard-locators/configurations-service.locators';
 
 export class ConfigurationsServicePage extends BasePage {
   private readonly locators = new ConfigurationsServiceLocators(this.page);

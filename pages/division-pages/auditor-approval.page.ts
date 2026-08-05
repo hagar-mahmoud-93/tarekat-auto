@@ -1,9 +1,9 @@
-import { BasePage } from './base.page';
-import { env } from '../config/env';
-import { InheritanceActionsLocators } from '../locators/inheritance-actions.locators';
+import { BasePage } from '../base.page';
+import { env } from '../../config/env';
+import { AuditorApprovalLocators } from '../../locators/admin-division-locators/auditor-approval.locators';
 
-export class InheritanceActionsPage extends BasePage {
-  private readonly locators = new InheritanceActionsLocators(this.page);
+export class AuditorApprovalPage extends BasePage {
+  private readonly locators = new AuditorApprovalLocators(this.page);
 
   async submitAuditorApprove(inheritanceId: string) {
     await this.page.goto(

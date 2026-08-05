@@ -2,8 +2,8 @@ import { test, expect } from '../../fixtures/base.fixture';
 import { env } from '../../config/env';
 import { DataPreparation } from '../../steps/data-preparation';
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
-import { HelpPage } from '../../pages/help.page';
-import { ContactUsPage } from '../../pages/contact-us.page';
+import { HelpPage } from '../../pages/crm-pages/help.page';
+import { ContactUsPage } from '../../pages/crm-pages/contact-us.page';
 
 test.describe('CRM Help Center - Contact us', () => {
   test('Beneficiary views contact details and opens a branch location @crm', async ({ seederPage, request }) => {

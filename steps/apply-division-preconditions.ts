@@ -1,8 +1,9 @@
 import { Page } from '@playwright/test';
 import { SeederPage } from '../pages/seeder.page';
-import { AdminSettingsPage } from '../pages/admin-settings.page';
-import { ConfigurationsServicePage } from '../pages/configurations-service.page';
-import { WaffleFlagsPage } from '../pages/waffle-flags.page';
+import { AdminLoginPage } from '../pages/admin-login.page';
+import { AdminIsMockDisabledPage } from '../pages/division-preconditions-pages/admin-is-mock-disabled.page';
+import { ConfigurationsServicePage } from '../pages/division-preconditions-pages/configurations-service.page';
+import { WaffleFlagsPage } from '../pages/division-preconditions-pages/waffle-flags.page';
 
 /** Waffle flags that must exist and be forced on (Everyone = Yes) for division v2 flows. */
 const REQUIRED_WAFFLE_FLAGS = [
@@ -19,9 +20,11 @@ const REQUIRED_WAFFLE_FLAGS = [
  * seeder tool.
  */
 export async function applyDivisionPreconditions(seederPage: SeederPage, adminPage: Page) {
-  const adminSettingsPage = new AdminSettingsPage(adminPage);
-  await adminSettingsPage.open();
-  await adminSettingsPage.disableValue();
+  const adminLoginPage = new AdminLoginPage(adminPage);
+  await adminLoginPage.open();
+
+  const adminIsMockDisabledPage = new AdminIsMockDisabledPage(adminPage);
+  await adminIsMockDisabledPage.disableValue();
 
   const configurationsServicePage = new ConfigurationsServicePage(adminPage);
   await configurationsServicePage.open();

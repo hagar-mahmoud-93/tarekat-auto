@@ -1,5 +1,5 @@
-import { BasePage } from './base.page';
-import { RequestsLocators } from '../locators/requests.locators';
+import { BasePage } from '../base.page';
+import { RequestsLocators } from '../../locators/ui-division-locators/requests.locators';
 
 export class RequestsPage extends BasePage {
   private readonly locators = new RequestsLocators(this.page);

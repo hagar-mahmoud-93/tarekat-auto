@@ -1,9 +1,9 @@
 import { BasePage } from './base.page';
 import { env } from '../config/env';
-import { AdminSettingsLocators } from '../locators/admin-settings.locators';
+import { AdminLoginLocators } from '../locators/admin-dashboard-locators/admin-login.locators';
 
-export class AdminSettingsPage extends BasePage {
-  private readonly locators = new AdminSettingsLocators(this.page);
+export class AdminLoginPage extends BasePage {
+  private readonly locators = new AdminLoginLocators(this.page);
 
   async open() {
     await this.page.goto(`${env.admin.apiURL}${env.admin.settingsURL}`);
@@ -13,12 +13,6 @@ export class AdminSettingsPage extends BasePage {
       await this.locators.passwordInput().fill(env.admin.password);
       await this.locators.loginButton().click();
     }
-    await this.page.waitForLoadState('networkidle').catch(() => {});
-  }
-
-  async disableValue() {
-    await this.locators.valueInput().fill('False');
-    await this.locators.saveButton().click();
     await this.page.waitForLoadState('networkidle').catch(() => {});
   }
 }

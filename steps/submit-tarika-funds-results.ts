@@ -1,5 +1,5 @@
 import { APIRequestContext } from '@playwright/test';
-import { DivisionDashboardPage } from '../pages/division-dashboard.page';
+import { DivisionDashboardPage } from '../pages/division-pages/division-dashboard.page';
 import { SeedResult } from '../pages/seeder.page';
 import { TransferFundsResultClient } from '../api/clients/transfer-funds-result.client';
 
