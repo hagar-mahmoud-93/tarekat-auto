@@ -72,4 +72,22 @@ export class CashDivisionsPage extends BasePage {
   inquiryStatus() {
     return this.locators.inquiryStatus();
   }
+
+  /**
+   * Opens the حالة التوزيع tab within the division view. The SPA doesn't reactively pick up a
+   * Tarika funds status callback that lands after the page has already loaded - the tab has no
+   * click handler at all (no cursor:pointer, not actionable) until the page is reloaded, which
+   * re-fetches the division's current state.
+   */
+  async openDistributionStatusTab() {
+    await this.page.reload();
+    await this.page.waitForLoadState('networkidle').catch(() => {});
+    await this.locators.distributionStatusTab().click();
+    await this.page.waitForLoadState('networkidle').catch(() => {});
+  }
+
+  /** The transfer-service error shown on the حالة التوزيع tab on a failed Tarika funds status callback. */
+  distributionStatusError() {
+    return this.locators.distributionStatusError();
+  }
 }

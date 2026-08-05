@@ -64,11 +64,24 @@ export class CashDivisionsLocators {
   }
 
   bankAccountTab() {
-    return this.page.getByText('الحساب البنكي');
+    return this.page.getByText('الحساب البنكي', { exact: true });
   }
 
   /** The "حالة الاستعلام" inquiry status in the الحساب البنكي tab. */
   inquiryStatus() {
     return this.page.getByRole('heading', { name: 'حالة الاستعلام' }).locator('xpath=..');
+  }
+
+  /** The "حالة التوزيع" tab within the division view (distinct from the case-details one). */
+  distributionStatusTab() {
+    return this.page.getByText('حالة التوزيع', { exact: true });
+  }
+
+  /**
+   * The transfer-service error shown on the حالة التوزيع tab when the Tarika funds status
+   * callback reports a failed transfer (transactionStatus 251) for a deceased asset.
+   */
+  distributionStatusError() {
+    return this.page.getByText('حدث خطأ في خدمة التحويل').locator('xpath=..');
   }
 }

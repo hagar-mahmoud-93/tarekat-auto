@@ -5,9 +5,11 @@ all other heirs approve, an admin auditor approves, Tarika (external funds syste
 account/balance status and settles the transfer, and the division completes. Existing coverage:
 `tests/divisionsFlows/cashDivision-BankAccounts.spec.ts`,
 `cashDivision-BankAndInvestmentAccounts.spec.ts`, `cashDivision-InvestmentAccounts.spec.ts`
-(happy paths, one per asset-type combo) and `divisionBlockers.spec.ts` (minor/dead-heir blockers,
-shared with investment division). Use this doc to generate new cases along the same shape rather
-than re-deriving the flow from scratch.
+(happy paths, one per asset-type combo), `cashDivision-TarikaFundsStatusFailure.spec.ts` /
+`cashDivision-InvestmentAccounts-TarikaFundsStatusFailure.spec.ts` (Tarika funds status reporting
+failure for every deceased asset, bank and investment accounts respectively), and
+`divisionBlockers.spec.ts` (minor/dead-heir blockers, shared with investment division). Use this
+doc to generate new cases along the same shape rather than re-deriving the flow from scratch.
 
 ## One-time environment precondition
 
@@ -95,6 +97,13 @@ things.
    `InheritanceActionsPage.submitAuditorApprove(inheritanceId)` — opens the inheritance's Django
    admin change page, sets the auditor-status select to `approved`, saves.
 7. **Simulate Tarika funds status + complete heir inquiries/account selection**:
+   - Real trigger chain: "Update Tarika" only fires once *all* approvals are in — every heir
+     plus the auditor — regardless of which order they're submitted in. Ejada then processes
+     the transfer async and notifies us via the Tarika funds status callback (this is what
+     `TarikaFundsStatusClient.simulate()` stands in for); a `transactionStatus` of `251` on an
+     entry is simply Ejada reporting that asset's transfer as failed, not an error on our side.
+     Don't call `simulate()` before both heir and auditor approval are done, or it won't reflect
+     a real callback.
    - `TarikaFundsStatusClient.simulate(result, divisionId, divisionType)` POSTs to
      `{API}/api/v1/inheritance/Transfer_Tarika_Funds_Status/` — one call per asset type present
      (`cashBankAccounts`/`cashInvestmentAccounts`), or both calls for
@@ -120,6 +129,45 @@ things.
      `{API}/api/v1/inheritance/Transfer_Funds_result/` via `TransferFundsResultClient`.
 9. **Verify completion** — reload the dashboard; `divisionStatus()` and `ejadaStage()` badges both
    read "COMPLETED".
+
+## Tarika funds status failure (all deceased assets)
+
+`TarikaFundsStatusClient.simulate(result, divisionId, divisionType, 'failure')` sets every entry
+in the `BankAccountStatusList`/`InvestmentAccountStatusList` to `transactionStatus: 251` instead
+of `250` — i.e. Ejada reporting *every* deceased asset's transfer as failed, not a partial mix.
+Confirmed live via `playwright-cli` (message text below is exact, not guessed):
+
+- The status surfaces do **not** all reflect the failure — they diverge by tab:
+  - `requestsPage.distributionStatus()` (بيانات الطلب tab, case details) still reads "مكتمل" —
+    this reflects that the *querying* stage finished, not that the transfer itself succeeded.
+  - `cashDivisionsPage.requestStatus()` ("حالة الطلب/ القسمة" on the divisions listing card)
+    similarly still reads "انتهت القسمة" (division ended) — same "stage complete" signal.
+  - `cashDivisionsPage.inquiryStatus()` (الحساب البنكي tab, "حالة الاستعلام") stays "قيد الاستعلام"
+    — this only changes via the admin dashboard's `completeHeirInqs`/`expireAccountChoosing`
+    (step 7), independent of the funds-status `transactionStatus`.
+  - The division's own **حالة التوزيع tab** (`cashDivisionsPage.openDistributionStatusTab()` /
+    `distributionStatusError()`, added for this case — not present before) is the one that
+    actually surfaces the failure: "حدث خطأ في خدمة التحويل." (an error occurred in the transfer
+    service) plus "يرجى إعادة الاستعلام عن حصر التركة من خلال خدمة حصر التركة ثم العودة لإتمام
+    عملية القسمة." (re-query the estate inventory, then return to complete the division), and the
+    "تحميل وثيقة قسمة الأموال النقدية" (download division document) button is disabled.
+  - This means asserting the failure case must target the حالة التوزيع tab specifically — the
+    other three status fields all read the same as the happy path at this point in the flow.
+
+- **SPA doesn't reactively pick up the callback**: after `simulate(..., 'failure')` POSTs land,
+  the حالة التوزيع tab has no click handler at all yet (no `cursor: pointer`, not actionable) if
+  the beneficiary page was already open before the callback arrived — confirmed by comparing
+  `playwright-cli` snapshots before/after a reload. `CashDivisionsPage.openDistributionStatusTab()`
+  reloads the page first for exactly this reason; skipping the reload leaves every click strategy
+  (plain, forced, `dispatchEvent`) silently no-op against a tab that isn't wired up yet.
+
+- **Auditor/heir approval ordering gotcha**: `adminPage` and `seederPage` are the same underlying
+  `page` fixture. The documented order (all heirs approve, *then* auditor approves) works because
+  by the time `adminPage` is reused for admin actions, the seeder tool's "Login as User" rows are
+  no longer needed. If a case needs the auditor to approve *before* the heirs (as this one does —
+  approval must be submitted before the first heir approves), do the admin-dashboard steps on a
+  separate tab (`await adminPage.context().newPage()`) instead of reusing `adminPage`/`page`
+  directly, or the heir-login loop will time out unable to find its rows.
 
 ## Division blockers (`divisionBlockers.spec.ts`, shared with investment division)
 
