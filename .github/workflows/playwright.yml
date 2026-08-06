@@ -331,18 +331,56 @@ jobs:
         FLAKY=$(( ${CRM_FLAKY:-0} + ${DIVISION_FLAKY:-0} + ${NAFITH_FLAKY:-0} ))
         RUN_AT=$(date -u '+%Y-%m-%d %H:%M UTC')
 
-        STATUS="success"
-        for r in "$CRM_RESULT" "$DIVISION_RESULT" "$NAFITH_RESULT"; do
-          if [ "$r" = "failure" ]; then STATUS="failure"; fi
-        done
-        EMOJI="✅"
-        [ "$STATUS" = "failure" ] && EMOJI="❌"
+        # Slack renders these :shortcode: forms as native icons — maps each job's
+        # result enum to one so the message reads at a glance instead of as plain text.
+        result_icon() {
+          case "$1" in
+            success) echo ':white_check_mark:';;
+            failure) echo ':x:';;
+            cancelled) echo ':no_entry_sign:';;
+            skipped) echo ':fast_forward:';;
+            *) echo ':grey_question:';;
+          esac
+        }
+        CRM_ICON=$(result_icon "$CRM_RESULT")
+        DIVISION_ICON=$(result_icon "$DIVISION_RESULT")
+        NAFITH_ICON=$(result_icon "$NAFITH_RESULT")
 
-        TEXT="${EMOJI} Tarekat E2E run #${RUN_ID} — ${RUN_AT}
-        Passed: ${PASSED} | Failed: ${FAILED} | Skipped: ${SKIPPED} | Flaky: ${FLAKY}
-        crm: ${CRM_RESULT}, division: ${DIVISION_RESULT}, nafith-login: ${NAFITH_RESULT}
-        <${REPORT_URL}|View Allure report> | <${RUN_URL}|View run>"
+        HEADER_ICON=':white_check_mark:'
+        for r in "$CRM_RESULT" "$DIVISION_RESULT" "$NAFITH_RESULT"; do
+          if [ "$r" = "failure" ]; then HEADER_ICON=':x:'; fi
+        done
+
+        PAYLOAD=$(jq -n \
+          --arg header_icon "$HEADER_ICON" --arg run_id "$RUN_ID" --arg run_at "$RUN_AT" \
+          --arg passed "$PASSED" --arg failed "$FAILED" --arg skipped "$SKIPPED" --arg flaky "$FLAKY" \
+          --arg crm_icon "$CRM_ICON" --arg crm_result "$CRM_RESULT" \
+          --arg division_icon "$DIVISION_ICON" --arg division_result "$DIVISION_RESULT" \
+          --arg nafith_icon "$NAFITH_ICON" --arg nafith_result "$NAFITH_RESULT" \
+          --arg report_url "$REPORT_URL" --arg run_url "$RUN_URL" \
+          '{
+            blocks: [
+              { type: "header", text: { type: "plain_text", text: ($header_icon + " Tarekat E2E run #" + $run_id), emoji: true } },
+              { type: "section", fields: [
+                { type: "mrkdwn", text: (":white_check_mark: *Passed:* " + $passed) },
+                { type: "mrkdwn", text: (":x: *Failed:* " + $failed) },
+                { type: "mrkdwn", text: (":fast_forward: *Skipped:* " + $skipped) },
+                { type: "mrkdwn", text: (":warning: *Flaky:* " + $flaky) }
+              ] },
+              { type: "section", text: { type: "mrkdwn", text: (
+                  $crm_icon + " *CRM:* " + $crm_result + "\n" +
+                  $division_icon + " *Division:* " + $division_result + "\n" +
+                  $nafith_icon + " *Nafith Login:* " + $nafith_result
+              ) } },
+              { type: "divider" },
+              { type: "context", elements: [
+                { type: "mrkdwn", text: (
+                  ":clock3: " + $run_at + "  •  <" + $report_url + "|:bar_chart: View Allure report>  •  <" + $run_url + "|:link: View run>"
+                ) }
+              ] }
+            ]
+          }')
 
         curl -sf -X POST -H 'Content-type: application/json' \
-          --data "$(jq -n --arg text "$TEXT" '{text: $text}')" \
+          --data "$PAYLOAD" \
           "$SLACK_WEBHOOK_URL"
