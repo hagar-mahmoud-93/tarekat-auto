@@ -132,6 +132,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    # Serializes gh-pages publishes: this job reads the current gh-pages content, merges in new
+    # results, then overwrites the whole branch — two overlapping runs can race and the second to
+    # start (not finish) clobbers the first's update with stale data it read before the first push.
+    concurrency:
+      group: publish-report-gh-pages
+      cancel-in-progress: false
     steps:
     - uses: actions/checkout@v4
     - name: Download allure results
