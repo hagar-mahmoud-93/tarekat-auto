@@ -36,6 +36,9 @@ No npm scripts defined yet — run Playwright directly, e.g. `npx playwright tes
   for the full area map — seeding a case with a given asset mix/heir mutation, the beneficiary
   → all-heirs → auditor → Tarika funds-status/settlement flow, division blockers (minor/dead
   heir), and a checklist for adding new cases.
+- **Profile** (`tests/profile/`, "الملف الشخصي"): see `specs/profile.md` for the full area map —
+  the first-time-heir redirect dialog, the two-tab page structure (basic data + bank account),
+  and which fields/flows are and aren't covered yet.
 
 ## Conventions
 
