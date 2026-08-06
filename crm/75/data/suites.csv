@@ -1,0 +1,7 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","30456","Beneficiary views contact details and opens a branch location @crm","Google Chrome","2026-08-06","passed","2026-08-06","CRM Help Center - Contact us","","",""
+"","23067","FAQ content matches its visual baseline across search and expand states @crm","Google Chrome","2026-08-06","failed","2026-08-06","CRM Help Center - FAQ","","",""
+"","34239","Ticket details step validates the التفاصيل field @crm","Google Chrome","2026-08-06","passed","2026-08-06","CRM complaints","","",""
+"","36430","Ticket details step validates the deceased ID and heir-enumeration deed number fields @crm","Google Chrome","2026-08-06","passed","2026-08-06","CRM complaints","","",""
+"","39567","Beneficiary submits a new support ticket via المساعدة @crm","Google Chrome","2026-08-06","passed","2026-08-06","CRM complaints","","",""
+"","23670","Applicant step validates the mobile number field @crm","Google Chrome","2026-08-06","passed","2026-08-06","CRM complaints","","",""
