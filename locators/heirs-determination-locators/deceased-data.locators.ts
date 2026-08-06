@@ -11,8 +11,9 @@ export class DeceasedDataLocators {
     return this.page.getByRole('option', { name });
   }
 
+  /** Placeholder switches to رقم الإقامة when نوع الهوية is إقامة, so both are matched. */
   idNumberInput() {
-    return this.page.getByPlaceholder('رقم الهوية');
+    return this.page.getByPlaceholder(/^(رقم الهوية|رقم الإقامة)$/);
   }
 
   /** تاريخ الميلاد input; defaults to هجري, matching the seeded deceased.birthDateHijri format. */

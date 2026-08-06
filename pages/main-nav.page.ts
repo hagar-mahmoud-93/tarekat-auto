@@ -7,4 +7,8 @@ export class MainNavPage extends BasePage {
   async openOnlineServices() {
     await this.locators.onlineServicesItem().click();
   }
+
+  async openMyOrders() {
+    await this.locators.myOrdersItem().click();
+  }
 }

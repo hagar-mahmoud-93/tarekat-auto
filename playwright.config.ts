@@ -82,20 +82,47 @@ export default defineConfig({
       name: 'division-preconditions',
       testDir: './tests/divisionsFlows',
       testMatch: /.*\.setup\.ts/,
-      use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: !!process.env.CI },
+      use: {
+        ...devices['Desktop Chrome'],
+        channel: 'chrome',
+        headless: !!process.env.CI,
+        // Maximizes the browser window for local headed runs; skipped on CI (headless, and
+        // toHaveScreenshot() baselines there are pinned to devices['Desktop Chrome']'s viewport).
+        ...(process.env.CI
+          ? {}
+          : { viewport: null, deviceScaleFactor: undefined, launchOptions: { args: ['--start-maximized'] } }),
+      },
     },
     {
       name: 'divisionsFlows',
       testDir: './tests/divisionsFlows',
       testIgnore: /.*\.setup\.ts/,
       dependencies: ['division-preconditions'],
-      use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: !!process.env.CI },
+      use: {
+        ...devices['Desktop Chrome'],
+        channel: 'chrome',
+        headless: !!process.env.CI,
+        // Maximizes the browser window for local headed runs; skipped on CI (headless, and
+        // toHaveScreenshot() baselines there are pinned to devices['Desktop Chrome']'s viewport).
+        ...(process.env.CI
+          ? {}
+          : { viewport: null, deviceScaleFactor: undefined, launchOptions: { args: ['--start-maximized'] } }),
+      },
     },
     {
       name: 'Google Chrome',
       testDir: './tests',
       testIgnore: /divisionsFlows[\\/]/,
-      use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: !!process.env.CI },
+      use: {
+        ...devices['Desktop Chrome'],
+        channel: 'chrome',
+        headless: !!process.env.CI,
+        // Maximizes the browser window for local headed runs; skipped on CI (headless, and
+        // toHaveScreenshot() baselines there are pinned to devices['Desktop Chrome']'s viewport).
+        ...(process.env.CI
+          ? {}
+          : { viewport: null, deviceScaleFactor: undefined, launchOptions: { args: ['--start-maximized'] } }),
+      },
     },
   ],
 

@@ -13,6 +13,8 @@ import { DeceasedDataPage } from '../pages/heirs-determination-pages/deceased-da
 import { HeirsSelectionPage } from '../pages/heirs-determination-pages/heirs-selection.page';
 import { HeirsListPage } from '../pages/heirs-determination-pages/heirs-list.page';
 import { WitnessDataPage } from '../pages/heirs-determination-pages/witness-data.page';
+import { RequestPreviewPage } from '../pages/heirs-determination-pages/request-preview.page';
+import { MyOrdersPage } from '../pages/my-orders.page';
 
 function randomMobileNumber(): string {
   let digits = '';
@@ -28,6 +30,8 @@ test.describe('Inheritance request', () => {
     let deceasedBirthDateHijri: string;
     let beneficiaryRelationshipType: string;
     let firstWitness: WitnessSeedData;
+    let secondWitness: WitnessSeedData;
+    let requestNumber: string;
 
     await test.step('Seed a Tawtheeq case with fresh heir data', async () => {
       const generateSeedDataClient = new GenerateSeedDataClient(request, env.tawtheeq.baseURL);
@@ -37,6 +41,7 @@ test.describe('Inheritance request', () => {
         deceasedBirthDateHijri: seededDeceasedBirthDateHijri,
         beneficiaryRelationshipType: seededBeneficiaryRelationshipType,
         firstWitness: seededFirstWitness,
+        secondWitness: seededSecondWitness,
       } = await generateSeedDataClient.seed();
 
       expect(response.ok()).toBeTruthy();
@@ -44,6 +49,7 @@ test.describe('Inheritance request', () => {
       deceasedBirthDateHijri = seededDeceasedBirthDateHijri;
       beneficiaryRelationshipType = seededBeneficiaryRelationshipType;
       firstWitness = seededFirstWitness;
+      secondWitness = seededSecondWitness;
     });
 
     await test.step('Nafath login', async () => {
@@ -175,6 +181,70 @@ test.describe('Inheritance request', () => {
       await witnessDataPage.selectIdTypeForIdentityType(firstWitness.identityType);
       await witnessDataPage.fillIdNumber(firstWitness.identityNumber);
       await witnessDataPage.fillBirthDateHijri(firstWitness.birthDateHijri);
+    });
+
+    await test.step('Verify بيانات الشاهد الأول', async () => {
+      const witnessDataPage = new WitnessDataPage(page);
+      await witnessDataPage.verify();
+    });
+
+    await test.step('Fill بيانات الشاهد الثاني', async () => {
+      const witnessDataPage = new WitnessDataPage(page);
+      await witnessDataPage.selectAnyRelationToDeceased();
+      await witnessDataPage.fillMobileNumber(secondWitness.phoneNumber);
+      await witnessDataPage.selectIdTypeForIdentityType(secondWitness.identityType);
+      await witnessDataPage.fillIdNumber(secondWitness.identityNumber);
+      await witnessDataPage.fillBirthDateHijri(secondWitness.birthDateHijri);
+    });
+
+    await test.step('Verify بيانات الشاهد الثاني', async () => {
+      const witnessDataPage = new WitnessDataPage(page);
+      await witnessDataPage.verify();
+    });
+
+    // حفظ ومتابعة stays disabled for ~1s after تحقق while the backend finishes validating the
+    // witness asynchronously; wizardNavPage.saveAndContinue()'s click retries until it's enabled.
+    await test.step('Save and continue', async () => {
+      const wizardNavPage = new WizardNavPage(page);
+      await wizardNavPage.saveAndContinue();
+
+      await expect(page.getByText('معاينة نموذج الطلب', { exact: true })).toBeVisible();
+    });
+
+    await test.step('Submit the request', async () => {
+      const wizardNavPage = new WizardNavPage(page);
+      await wizardNavPage.saveAndContinue();
+    });
+
+    await test.step('Close the loading popup', async () => {
+      const requestPreviewPage = new RequestPreviewPage(page);
+      await requestPreviewPage.closeLoadingPopup();
+    });
+
+    await test.step('Save طلب حصر الورثة رقم from the confirmation popup', async () => {
+      const requestPreviewPage = new RequestPreviewPage(page);
+      requestNumber = await requestPreviewPage.getSubmittedRequestNumber();
+
+      console.log('Submitted طلب حصر الورثة رقم:', requestNumber);
+    });
+
+    await test.step('View عرض تفاصيل الطلب', async () => {
+      const requestPreviewPage = new RequestPreviewPage(page);
+      await requestPreviewPage.viewRequestDetails();
+
+      await expect(page.getByText('تم تقديم طلب حصر الورثة رقم', { exact: false })).not.toBeVisible();
+    });
+
+    await test.step('Search for طلب حصر الورثة رقم in الطلبات', async () => {
+      const mainNavPage = new MainNavPage(page);
+      await mainNavPage.openMyOrders();
+
+      await expect(page).toHaveURL(/\/my-orders/);
+
+      const myOrdersPage = new MyOrdersPage(page);
+      await myOrdersPage.search(requestNumber);
+
+      await expect(myOrdersPage.requestNumberResult(requestNumber)).toBeVisible();
     });
   });
 });

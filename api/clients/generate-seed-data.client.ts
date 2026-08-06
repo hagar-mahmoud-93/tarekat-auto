@@ -37,6 +37,7 @@ export type SeedDataResult = {
   deceasedBirthDateHijri: string;
   beneficiaryRelationshipType: string;
   firstWitness: WitnessSeedData;
+  secondWitness: WitnessSeedData;
 };
 
 export class GenerateSeedDataClient extends BaseApiClient {
@@ -49,6 +50,8 @@ export class GenerateSeedDataClient extends BaseApiClient {
     const witnessIdentities = [randomIdentity(), randomIdentity()];
     const firstWitnessPhoneNumber = '0566787654';
     const firstWitnessBirthDateHijri = '1400/09/25';
+    const secondWitnessPhoneNumber = '0566787456';
+    const secondWitnessBirthDateHijri = '1411/01/23';
     const requestId = randomId();
 
     const payload = {
@@ -159,8 +162,8 @@ export class GenerateSeedDataClient extends BaseApiClient {
           gender: 1,
           nationalityId: 1,
           birthDate: '1990-08-13T00:00:00',
-          birthDateHijri: '',
-          phoneNumber: '0566787456',
+          birthDateHijri: secondWitnessBirthDateHijri,
+          phoneNumber: secondWitnessPhoneNumber,
           relationshipTypeId: 13,
         },
       ],
@@ -191,6 +194,19 @@ export class GenerateSeedDataClient extends BaseApiClient {
       birthDateHijri: firstWitnessBirthDateHijri,
     };
 
-    return { response, deceasedIdentity, deceasedBirthDateHijri, beneficiaryRelationshipType, firstWitness };
+    const secondWitness: WitnessSeedData = {
+      ...witnessIdentities[1],
+      phoneNumber: secondWitnessPhoneNumber,
+      birthDateHijri: secondWitnessBirthDateHijri,
+    };
+
+    return {
+      response,
+      deceasedIdentity,
+      deceasedBirthDateHijri,
+      beneficiaryRelationshipType,
+      firstWitness,
+      secondWitness,
+    };
   }
 }
