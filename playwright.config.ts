@@ -29,9 +29,15 @@ export default defineConfig({
   workers: process.env.CI ? '50%' : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters
    * On CI: 'list' prints live per-test pass/fail to the raw Action log (silent otherwise with
-   * just 'html'), 'github' turns failures into inline annotations on the PR/Checks page. */
+   * just 'html'), 'github' turns failures into inline annotations on the PR/Checks page, 'json'
+   * feeds the pass/fail/skipped/flaky counts into the Slack notification step. */
   reporter: process.env.CI
-    ? [['list'], ['github'], ['allure-playwright', { outputFolder: 'allure-results', suiteTitle: false, detail: true }]]
+    ? [
+        ['list'],
+        ['github'],
+        ['allure-playwright', { outputFolder: 'allure-results', suiteTitle: false, detail: true }],
+        ['json', { outputFile: 'test-results/results.json' }],
+      ]
     : 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
