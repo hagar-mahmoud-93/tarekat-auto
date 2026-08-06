@@ -178,11 +178,12 @@ jobs:
         publish_branch: gh-pages
         publish_dir: allure-history
 
-  # Only the unattended daily run gets a Slack ping — push/PR/dispatch runs already surface
-  # their result in the Actions UI or PR checks in front of whoever triggered them.
+  # Slack ping for the unattended daily run, plus manual workflow_dispatch runs so the
+  # notification path can be tested on demand — push/PR runs still skip it since those
+  # already surface results in the Actions UI or PR checks in front of whoever triggered them.
   notify-slack:
     needs: [crm, division, nafith-login, publish-report]
-    if: ${{ always() && github.event_name == 'schedule' }}
+    if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     steps:
     - name: Send Slack notification
