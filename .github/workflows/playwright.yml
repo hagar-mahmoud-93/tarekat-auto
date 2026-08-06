@@ -64,8 +64,8 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
-        name: playwright-report-crm
-        path: playwright-report/
+        name: allure-results-crm
+        path: allure-results/
         retention-days: 30
 
   division:
@@ -96,8 +96,8 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
-        name: playwright-report-division
-        path: playwright-report/
+        name: allure-results-division
+        path: allure-results/
         retention-days: 30
 
   nafith-login:
@@ -119,6 +119,79 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
-        name: playwright-report-nafith-login
-        path: playwright-report/
+        name: allure-results-nafith-login
+        path: allure-results/
         retention-days: 30
+
+  # Builds the three domain Allure reports (each with its own history, seeded from gh-pages)
+  # and publishes them in a single commit — avoids the gh-pages push races that three
+  # independent deploy steps running in parallel would cause.
+  publish-report:
+    needs: [crm, division, nafith-login]
+    # Runs even if a domain job didn't execute for this trigger's scope (skipped, not failed).
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+    - name: Download allure results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: allure-results-*
+        path: allure-results-all
+        merge-multiple: false
+    - name: Load report history
+      uses: actions/checkout@v4
+      if: always()
+      continue-on-error: true
+      with:
+        ref: gh-pages
+        path: gh-pages
+    - name: Build crm report
+      if: hashFiles('allure-results-all/allure-results-crm/**') != ''
+      uses: simple-elf/allure-report-action@v1.15
+      with:
+        allure_results: allure-results-all/allure-results-crm
+        allure_history: allure-history
+        allure_report: allure-report
+        gh_pages: gh-pages
+        subfolder: crm
+    - name: Build division report
+      if: hashFiles('allure-results-all/allure-results-division/**') != ''
+      uses: simple-elf/allure-report-action@v1.15
+      with:
+        allure_results: allure-results-all/allure-results-division
+        allure_history: allure-history
+        allure_report: allure-report
+        gh_pages: gh-pages
+        subfolder: division
+    - name: Build nafith-login report
+      if: hashFiles('allure-results-all/allure-results-nafith-login/**') != ''
+      uses: simple-elf/allure-report-action@v1.15
+      with:
+        allure_results: allure-results-all/allure-results-nafith-login
+        allure_history: allure-history
+        allure_report: allure-report
+        gh_pages: gh-pages
+        subfolder: nafith-login
+    - name: Add report index
+      run: |
+        cat > allure-history/index.html <<'EOF'
+        <!doctype html>
+        <meta charset="utf-8">
+        <title>Tarekat E2E test reports</title>
+        <h1>Tarekat E2E test reports</h1>
+        <ul>
+          <li><a href="crm/">CRM / Help Center</a></li>
+          <li><a href="division/">Divisions (cash / investment)</a></li>
+          <li><a href="nafith-login/">Nafith login</a></li>
+        </ul>
+        EOF
+    - name: Publish report to GitHub Pages
+      if: always()
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: allure-history
