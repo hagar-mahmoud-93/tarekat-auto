@@ -175,6 +175,13 @@ jobs:
         allure_report: allure-report
         gh_pages: gh-pages
         subfolder: nafith-login
+    - name: Fix report ownership
+      # The allure-report-action runs as root in a Docker container, so allure-history/ ends up
+      # root-owned on the runner's filesystem — reclaim it before the runner user writes to it.
+      if: always()
+      run: |
+        mkdir -p allure-history
+        sudo chown -R "$(id -u):$(id -g)" allure-history
     - name: Add report index
       run: |
         cat > allure-history/index.html <<'EOF'
