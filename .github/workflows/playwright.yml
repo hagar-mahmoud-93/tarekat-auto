@@ -63,10 +63,25 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+        cache: 'npm'
     - name: Install dependencies
       run: npm ci
+    # Browser binaries are the slow part of "install --with-deps" — cache them by
+    # lockfile hash so a run only re-downloads when the Playwright version actually
+    # changes. OS-level deps (apt packages) aren't cacheable this way, so on a cache
+    # hit we still run install-deps for those, which is fast on the stock ubuntu-latest image.
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
     - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps
+    - name: Install Playwright OS dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: npx playwright install-deps
     - name: Run Playwright tests
       run: npx playwright test --grep "@crm"
     - uses: actions/upload-artifact@v4
@@ -114,10 +129,25 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+        cache: 'npm'
     - name: Install dependencies
       run: npm ci
+    # Browser binaries are the slow part of "install --with-deps" — cache them by
+    # lockfile hash so a run only re-downloads when the Playwright version actually
+    # changes. OS-level deps (apt packages) aren't cacheable this way, so on a cache
+    # hit we still run install-deps for those, which is fast on the stock ubuntu-latest image.
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
     - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps
+    - name: Install Playwright OS dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: npx playwright install-deps
     - name: Run Playwright tests
       env:
         SCOPE_LABEL: ${{ needs.scope.outputs.label }}
@@ -167,10 +197,25 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+        cache: 'npm'
     - name: Install dependencies
       run: npm ci
+    # Browser binaries are the slow part of "install --with-deps" — cache them by
+    # lockfile hash so a run only re-downloads when the Playwright version actually
+    # changes. OS-level deps (apt packages) aren't cacheable this way, so on a cache
+    # hit we still run install-deps for those, which is fast on the stock ubuntu-latest image.
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
     - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps
+    - name: Install Playwright OS dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: npx playwright install-deps
     - name: Run Playwright tests
       run: npx playwright test --grep "@nafith-login"
     - uses: actions/upload-artifact@v4
