@@ -53,6 +53,11 @@ jobs:
     if: ${{ needs.scope.outputs.label == 'full' || needs.scope.outputs.label == 'crm' }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    outputs:
+      passed: ${{ steps.summary.outputs.passed }}
+      failed: ${{ steps.summary.outputs.failed }}
+      skipped: ${{ steps.summary.outputs.skipped }}
+      flaky: ${{ steps.summary.outputs.flaky }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -70,6 +75,27 @@ jobs:
         name: allure-results-crm
         path: allure-results/
         retention-days: 30
+    # Feeds the Slack notification's pass/fail/skipped/flaky counts — read from Playwright's
+    # own JSON reporter output (test-results/results.json), not Allure, since Allure results
+    # get merged across domains later and lose the per-domain breakdown by then.
+    - name: Extract test summary
+      id: summary
+      if: always()
+      run: |
+        if [ -f test-results/results.json ]; then
+          PASSED=$(jq '.stats.expected' test-results/results.json)
+          FAILED=$(jq '.stats.unexpected' test-results/results.json)
+          SKIPPED=$(jq '.stats.skipped' test-results/results.json)
+          FLAKY=$(jq '.stats.flaky' test-results/results.json)
+        else
+          PASSED=0; FAILED=0; SKIPPED=0; FLAKY=0
+        fi
+        {
+          echo "passed=$PASSED"
+          echo "failed=$FAILED"
+          echo "skipped=$SKIPPED"
+          echo "flaky=$FLAKY"
+        } >> "$GITHUB_OUTPUT"
 
   division:
     needs: scope
@@ -78,6 +104,11 @@ jobs:
       needs.scope.outputs.label == 'cash-division' || needs.scope.outputs.label == 'investment-division' }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    outputs:
+      passed: ${{ steps.summary.outputs.passed }}
+      failed: ${{ steps.summary.outputs.failed }}
+      skipped: ${{ steps.summary.outputs.skipped }}
+      flaky: ${{ steps.summary.outputs.flaky }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -102,12 +133,35 @@ jobs:
         name: allure-results-division
         path: allure-results/
         retention-days: 30
+    - name: Extract test summary
+      id: summary
+      if: always()
+      run: |
+        if [ -f test-results/results.json ]; then
+          PASSED=$(jq '.stats.expected' test-results/results.json)
+          FAILED=$(jq '.stats.unexpected' test-results/results.json)
+          SKIPPED=$(jq '.stats.skipped' test-results/results.json)
+          FLAKY=$(jq '.stats.flaky' test-results/results.json)
+        else
+          PASSED=0; FAILED=0; SKIPPED=0; FLAKY=0
+        fi
+        {
+          echo "passed=$PASSED"
+          echo "failed=$FAILED"
+          echo "skipped=$SKIPPED"
+          echo "flaky=$FLAKY"
+        } >> "$GITHUB_OUTPUT"
 
   nafith-login:
     needs: scope
     if: ${{ needs.scope.outputs.label == 'full' || needs.scope.outputs.label == 'nafith-login' }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    outputs:
+      passed: ${{ steps.summary.outputs.passed }}
+      failed: ${{ steps.summary.outputs.failed }}
+      skipped: ${{ steps.summary.outputs.skipped }}
+      flaky: ${{ steps.summary.outputs.flaky }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -125,6 +179,24 @@ jobs:
         name: allure-results-nafith-login
         path: allure-results/
         retention-days: 30
+    - name: Extract test summary
+      id: summary
+      if: always()
+      run: |
+        if [ -f test-results/results.json ]; then
+          PASSED=$(jq '.stats.expected' test-results/results.json)
+          FAILED=$(jq '.stats.unexpected' test-results/results.json)
+          SKIPPED=$(jq '.stats.skipped' test-results/results.json)
+          FLAKY=$(jq '.stats.flaky' test-results/results.json)
+        else
+          PASSED=0; FAILED=0; SKIPPED=0; FLAKY=0
+        fi
+        {
+          echo "passed=$PASSED"
+          echo "failed=$FAILED"
+          echo "skipped=$SKIPPED"
+          echo "flaky=$FLAKY"
+        } >> "$GITHUB_OUTPUT"
 
   # Merges the results from all three domain jobs into a single Allure report (one history,
   # one set of trend graphs) instead of three independent per-domain reports.
@@ -192,15 +264,40 @@ jobs:
         CRM_RESULT: ${{ needs.crm.result }}
         DIVISION_RESULT: ${{ needs.division.result }}
         NAFITH_RESULT: ${{ needs.nafith-login.result }}
+        CRM_PASSED: ${{ needs.crm.outputs.passed }}
+        CRM_FAILED: ${{ needs.crm.outputs.failed }}
+        CRM_SKIPPED: ${{ needs.crm.outputs.skipped }}
+        CRM_FLAKY: ${{ needs.crm.outputs.flaky }}
+        DIVISION_PASSED: ${{ needs.division.outputs.passed }}
+        DIVISION_FAILED: ${{ needs.division.outputs.failed }}
+        DIVISION_SKIPPED: ${{ needs.division.outputs.skipped }}
+        DIVISION_FLAKY: ${{ needs.division.outputs.flaky }}
+        NAFITH_PASSED: ${{ needs.nafith-login.outputs.passed }}
+        NAFITH_FAILED: ${{ needs.nafith-login.outputs.failed }}
+        NAFITH_SKIPPED: ${{ needs.nafith-login.outputs.skipped }}
+        NAFITH_FLAKY: ${{ needs.nafith-login.outputs.flaky }}
+        RUN_ID: ${{ github.run_id }}
         REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
         RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       run: |
+        PASSED=$(( ${CRM_PASSED:-0} + ${DIVISION_PASSED:-0} + ${NAFITH_PASSED:-0} ))
+        FAILED=$(( ${CRM_FAILED:-0} + ${DIVISION_FAILED:-0} + ${NAFITH_FAILED:-0} ))
+        SKIPPED=$(( ${CRM_SKIPPED:-0} + ${DIVISION_SKIPPED:-0} + ${NAFITH_SKIPPED:-0} ))
+        FLAKY=$(( ${CRM_FLAKY:-0} + ${DIVISION_FLAKY:-0} + ${NAFITH_FLAKY:-0} ))
+        RUN_AT=$(date -u '+%Y-%m-%d %H:%M UTC')
+
         STATUS="success"
         for r in "$CRM_RESULT" "$DIVISION_RESULT" "$NAFITH_RESULT"; do
           if [ "$r" = "failure" ]; then STATUS="failure"; fi
         done
         EMOJI="✅"
         [ "$STATUS" = "failure" ] && EMOJI="❌"
+
+        TEXT="${EMOJI} Tarekat E2E run #${RUN_ID} — ${RUN_AT}
+        Passed: ${PASSED} | Failed: ${FAILED} | Skipped: ${SKIPPED} | Flaky: ${FLAKY}
+        crm: ${CRM_RESULT}, division: ${DIVISION_RESULT}, nafith-login: ${NAFITH_RESULT}
+        <${REPORT_URL}|View Allure report> | <${RUN_URL}|View run>"
+
         curl -sf -X POST -H 'Content-type: application/json' \
-          --data "{\"text\": \"${EMOJI} Daily Tarekat E2E run — crm: ${CRM_RESULT}, division: ${DIVISION_RESULT}, nafith-login: ${NAFITH_RESULT}\n<${REPORT_URL}|View Allure report> | <${RUN_URL}|View run>\"}" \
+          --data "$(jq -n --arg text "$TEXT" '{text: $text}')" \
           "$SLACK_WEBHOOK_URL"
