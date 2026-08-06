@@ -10,6 +10,9 @@ on:
   # the full set. No label runs the full suite.
   repository_dispatch:
     types: [run-tests]
+  # Daily full-suite run at 4:50pm Riyadh time (UTC+3, no DST) = 13:50 UTC.
+  schedule:
+    - cron: '50 13 * * *'
   # Manual trigger from the Actions tab — "Use workflow from" gives the branch picker for free;
   # this input adds a suite picker alongside it.
   workflow_dispatch:
