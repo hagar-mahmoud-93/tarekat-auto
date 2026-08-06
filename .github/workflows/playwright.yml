@@ -10,9 +10,9 @@ on:
   # the full set. No label runs the full suite.
   repository_dispatch:
     types: [run-tests]
-  # Daily full-suite run at 4:50pm Riyadh time (UTC+3, no DST) = 13:50 UTC.
+  # Daily full-suite run at 4:15pm Riyadh time (UTC+3, no DST) = 13:15 UTC.
   schedule:
-    - cron: '50 13 * * *'
+    - cron: '15 13 * * *'
   # Manual trigger from the Actions tab — "Use workflow from" gives the branch picker for free;
   # this input adds a suite picker alongside it.
   workflow_dispatch:
@@ -177,3 +177,29 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_branch: gh-pages
         publish_dir: allure-history
+
+  # Only the unattended daily run gets a Slack ping — push/PR/dispatch runs already surface
+  # their result in the Actions UI or PR checks in front of whoever triggered them.
+  notify-slack:
+    needs: [crm, division, nafith-login, publish-report]
+    if: ${{ always() && github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Send Slack notification
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        CRM_RESULT: ${{ needs.crm.result }}
+        DIVISION_RESULT: ${{ needs.division.result }}
+        NAFITH_RESULT: ${{ needs.nafith-login.result }}
+        REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        STATUS="success"
+        for r in "$CRM_RESULT" "$DIVISION_RESULT" "$NAFITH_RESULT"; do
+          if [ "$r" = "failure" ]; then STATUS="failure"; fi
+        done
+        EMOJI="✅"
+        [ "$STATUS" = "failure" ] && EMOJI="❌"
+        curl -sf -X POST -H 'Content-type: application/json' \
+          --data "{\"text\": \"${EMOJI} Daily Tarekat E2E run — crm: ${CRM_RESULT}, division: ${DIVISION_RESULT}, nafith-login: ${NAFITH_RESULT}\n<${REPORT_URL}|View Allure report> | <${RUN_URL}|View run>\"}" \
+          "$SLACK_WEBHOOK_URL"
