@@ -12,7 +12,7 @@ on:
     types: [run-tests]
   # Daily full-suite run at 4:18pm Riyadh time (UTC+3, no DST) = 13:18 UTC.
   schedule:
-    - cron: '21 13 * * *'
+    - cron: '27 13 * * *'
   # Manual trigger from the Actions tab — "Use workflow from" gives the branch picker for free;
   # this input adds a suite picker alongside it.
   workflow_dispatch:
