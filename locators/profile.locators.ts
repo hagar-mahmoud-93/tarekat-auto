@@ -51,8 +51,16 @@ export class ProfileLocators {
     return this.page.getByRole('button', { name: 'بيانات الحساب البنكي' });
   }
 
+  /**
+   * The content-card title shown once the بيانات الحساب البنكي tab is active. It renders as a
+   * plain paragraph, not a heading (unlike basicDataHeading() below, which is a real heading), and
+   * Playwright's role engine doesn't resolve getByRole('paragraph', ...) against it even though
+   * it shows up as such in an aria snapshot — so this matches on text instead. The tab button's
+   * own inner label has the exact same text, so this is scoped to the last match (the button's
+   * copy comes first in the DOM).
+   */
   bankAccountsHeading() {
-    return this.page.getByRole('heading', { name: 'بيانات الحساب البنكي' });
+    return this.page.getByText('بيانات الحساب البنكي', { exact: true }).last();
   }
 
   ibanInput() {

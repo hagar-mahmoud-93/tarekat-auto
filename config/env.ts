@@ -12,7 +12,7 @@ export const env = {
     password: process.env.NAFATH_PASSWORD ?? '1059608891',
   },
   admin: {
-    apiURL: process.env.ADMIN_API_URL ?? 'https://ops-merath.api.azm-dev.com/admin/',
+    apiURL: process.env.ADMIN_API_URL ?? 'https://ops-merath.api.azm-dev.com/admin',
     username: process.env.ADMIN_USERNAME ?? 'root',
     password: process.env.ADMIN_PASSWORD ?? 'root@001',
     divisionURL: process.env.DIVISION_ADMIN_API_URL ?? '/division_v2/division/',
