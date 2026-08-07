@@ -41,19 +41,49 @@ test.describe('Profile', () => {
       await expect(locators.basicDataHeading()).toBeVisible();
     });
 
-    await test.step('Entering a number that doesn\'t start with 05 shows the field validation error', async () => {
+    await test.step('Opening the الجوال editor pre-fills the current number', async () => {
       await locators.mobileFieldEditButton().click();
-      await locators.mobileNumberInput().fill('5512345678');
-      await locators.saveMobileButton().click();
-
-      await expect(locators.mobileNumberValidationError()).toBeVisible();
+      await expect(locators.mobileNumberInput()).not.toBeEmpty();
     });
 
-    await test.step('Entering a 05-prefixed 10-digit number clears the validation error', async () => {
-      await locators.mobileNumberInput().fill('0512345678');
+    await test.step('Clearing the field and saving shows no validation error (silent no-op, save button stays enabled)', async () => {
+      await locators.mobileNumberInput().fill('');
+      await expect(locators.saveMobileButton()).toBeEnabled();
       await locators.saveMobileButton().click();
 
       await expect(locators.mobileNumberValidationError()).toBeHidden();
     });
+
+    // Every one of these is rejected by the same "(05) + 10 digits" rule — verified via the
+    // shared field validation error rather than one-off assertions per shape.
+    const invalidMobileNumbers = [
+      { label: 'fewer than 10 digits (9, correctly 05-prefixed)', value: '051234567' },
+      { label: 'more than 10 digits (11, correctly 05-prefixed)', value: '05123456789' },
+      { label: '10 digits not starting with 05 (starts with 55)', value: '5512345678' },
+      { label: '10 digits starting with 04 instead of 05', value: '0412345678' },
+      { label: 'international format (966 prefix)', value: '966512345678' },
+      { label: 'non-numeric input', value: 'abcdefghij' },
+    ];
+
+    for (const { label, value } of invalidMobileNumbers) {
+      await test.step(`Entering ${label} shows the field validation error`, async () => {
+        await locators.mobileNumberInput().fill(value);
+        await locators.saveMobileButton().click();
+
+        await expect(locators.mobileNumberValidationError()).toBeVisible();
+      });
+    }
+
+    await test.step('Entering a 05-prefixed 10-digit number clears the validation error', async () => {
+      // Randomized rather than a fixed literal so repeated runs don't collide with a number
+      // already assigned to a different heir from an earlier seed.
+      const validNumber = '05' + String(Math.floor(10_000_000 + Math.random() * 90_000_000));
+      await locators.mobileNumberInput().fill(validNumber);
+      await locators.saveMobileButton().click();
+
+      await expect(locators.mobileNumberValidationError()).toBeHidden();
+    });
+
+    await heirTab.close();
   });
 });
