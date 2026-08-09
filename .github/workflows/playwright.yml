@@ -6,8 +6,8 @@ on:
     branches: [ main, master ]
   # Fired by other repos' pipelines (e.g. BE/FE) when their change touches an area we cover here,
   # so we catch regressions before they merge. client_payload.label maps to a @tag on the relevant
-  # suite (@cash-division, @investment-division, @division, @nafith-login, ...) — see tests/ for
-  # the full set. No label runs the full suite.
+  # suite (@cash-division, @investment-division, @division, @nafith-login, @profile, ...) — see
+  # tests/ for the full set. No label runs the full suite.
   repository_dispatch:
     types: [run-tests]
   # Daily full-suite run at 4:18pm Riyadh time (UTC+3, no DST) = 13:18 UTC.
@@ -27,6 +27,7 @@ on:
           - crm
           - division
           - nafith-login
+          - profile
 jobs:
   # Resolves which suite(s) to run from either trigger, once, so the three suite jobs below don't
   # each repeat the same parsing/validation of an untrusted external payload.
@@ -46,8 +47,8 @@ jobs:
         fi
         echo "label=$LABEL" >> "$GITHUB_OUTPUT"
 
-  # Named per domain (crm / division / nafith-login) so each shows as its own check in the PR/Actions
-  # UI and runs in parallel — they only share the `scope` dependency, not each other.
+  # Named per domain (crm / division / nafith-login / profile) so each shows as its own check in
+  # the PR/Actions UI and runs in parallel — they only share the `scope` dependency, not each other.
   crm:
     needs: scope
     if: ${{ needs.scope.outputs.label == 'full' || needs.scope.outputs.label == 'crm' }}
@@ -243,10 +244,71 @@ jobs:
           echo "flaky=$FLAKY"
         } >> "$GITHUB_OUTPUT"
 
-  # Merges the results from all three domain jobs into a single Allure report (one history,
-  # one set of trend graphs) instead of three independent per-domain reports.
+  profile:
+    needs: scope
+    if: ${{ needs.scope.outputs.label == 'full' || needs.scope.outputs.label == 'profile' }}
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    outputs:
+      passed: ${{ steps.summary.outputs.passed }}
+      failed: ${{ steps.summary.outputs.failed }}
+      skipped: ${{ steps.summary.outputs.skipped }}
+      flaky: ${{ steps.summary.outputs.flaky }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+        cache: 'npm'
+    - name: Install dependencies
+      run: npm ci
+    # Browser binaries are the slow part of "install --with-deps" — cache them by
+    # lockfile hash so a run only re-downloads when the Playwright version actually
+    # changes. OS-level deps (apt packages) aren't cacheable this way, so on a cache
+    # hit we still run install-deps for those, which is fast on the stock ubuntu-latest image.
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+    - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      run: npx playwright install --with-deps
+    - name: Install Playwright OS dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: npx playwright install-deps
+    - name: Run Playwright tests
+      run: npx playwright test --grep "@profile"
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: allure-results-profile
+        path: allure-results/
+        retention-days: 30
+    - name: Extract test summary
+      id: summary
+      if: always()
+      run: |
+        if [ -f test-results/results.json ]; then
+          PASSED=$(jq '.stats.expected' test-results/results.json)
+          FAILED=$(jq '.stats.unexpected' test-results/results.json)
+          SKIPPED=$(jq '.stats.skipped' test-results/results.json)
+          FLAKY=$(jq '.stats.flaky' test-results/results.json)
+        else
+          PASSED=0; FAILED=0; SKIPPED=0; FLAKY=0
+        fi
+        {
+          echo "passed=$PASSED"
+          echo "failed=$FAILED"
+          echo "skipped=$SKIPPED"
+          echo "flaky=$FLAKY"
+        } >> "$GITHUB_OUTPUT"
+
+  # Merges the results from all four domain jobs into a single Allure report (one history,
+  # one set of trend graphs) instead of four independent per-domain reports.
   publish-report:
-    needs: [crm, division, nafith-login]
+    needs: [crm, division, nafith-login, profile]
     # Runs even if a domain job didn't execute for this trigger's scope (skipped, not failed).
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
@@ -299,7 +361,7 @@ jobs:
   # notification path can be tested on demand — push/PR runs still skip it since those
   # already surface results in the Actions UI or PR checks in front of whoever triggered them.
   notify-slack:
-    needs: [crm, division, nafith-login, publish-report]
+    needs: [crm, division, nafith-login, profile, publish-report]
     if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     steps:
@@ -309,6 +371,7 @@ jobs:
         CRM_RESULT: ${{ needs.crm.result }}
         DIVISION_RESULT: ${{ needs.division.result }}
         NAFITH_RESULT: ${{ needs.nafith-login.result }}
+        PROFILE_RESULT: ${{ needs.profile.result }}
         CRM_PASSED: ${{ needs.crm.outputs.passed }}
         CRM_FAILED: ${{ needs.crm.outputs.failed }}
         CRM_SKIPPED: ${{ needs.crm.outputs.skipped }}
@@ -321,14 +384,18 @@ jobs:
         NAFITH_FAILED: ${{ needs.nafith-login.outputs.failed }}
         NAFITH_SKIPPED: ${{ needs.nafith-login.outputs.skipped }}
         NAFITH_FLAKY: ${{ needs.nafith-login.outputs.flaky }}
+        PROFILE_PASSED: ${{ needs.profile.outputs.passed }}
+        PROFILE_FAILED: ${{ needs.profile.outputs.failed }}
+        PROFILE_SKIPPED: ${{ needs.profile.outputs.skipped }}
+        PROFILE_FLAKY: ${{ needs.profile.outputs.flaky }}
         RUN_ID: ${{ github.run_id }}
         REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
         RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       run: |
-        PASSED=$(( ${CRM_PASSED:-0} + ${DIVISION_PASSED:-0} + ${NAFITH_PASSED:-0} ))
-        FAILED=$(( ${CRM_FAILED:-0} + ${DIVISION_FAILED:-0} + ${NAFITH_FAILED:-0} ))
-        SKIPPED=$(( ${CRM_SKIPPED:-0} + ${DIVISION_SKIPPED:-0} + ${NAFITH_SKIPPED:-0} ))
-        FLAKY=$(( ${CRM_FLAKY:-0} + ${DIVISION_FLAKY:-0} + ${NAFITH_FLAKY:-0} ))
+        PASSED=$(( ${CRM_PASSED:-0} + ${DIVISION_PASSED:-0} + ${NAFITH_PASSED:-0} + ${PROFILE_PASSED:-0} ))
+        FAILED=$(( ${CRM_FAILED:-0} + ${DIVISION_FAILED:-0} + ${NAFITH_FAILED:-0} + ${PROFILE_FAILED:-0} ))
+        SKIPPED=$(( ${CRM_SKIPPED:-0} + ${DIVISION_SKIPPED:-0} + ${NAFITH_SKIPPED:-0} + ${PROFILE_SKIPPED:-0} ))
+        FLAKY=$(( ${CRM_FLAKY:-0} + ${DIVISION_FLAKY:-0} + ${NAFITH_FLAKY:-0} + ${PROFILE_FLAKY:-0} ))
         RUN_AT=$(date -u '+%Y-%m-%d %H:%M UTC')
 
         # Slack renders these :shortcode: forms as native icons — maps each job's
@@ -345,9 +412,10 @@ jobs:
         CRM_ICON=$(result_icon "$CRM_RESULT")
         DIVISION_ICON=$(result_icon "$DIVISION_RESULT")
         NAFITH_ICON=$(result_icon "$NAFITH_RESULT")
+        PROFILE_ICON=$(result_icon "$PROFILE_RESULT")
 
         HEADER_ICON=':white_check_mark:'
-        for r in "$CRM_RESULT" "$DIVISION_RESULT" "$NAFITH_RESULT"; do
+        for r in "$CRM_RESULT" "$DIVISION_RESULT" "$NAFITH_RESULT" "$PROFILE_RESULT"; do
           if [ "$r" = "failure" ]; then HEADER_ICON=':x:'; fi
         done
 
@@ -357,6 +425,7 @@ jobs:
           --arg crm_icon "$CRM_ICON" --arg crm_result "$CRM_RESULT" \
           --arg division_icon "$DIVISION_ICON" --arg division_result "$DIVISION_RESULT" \
           --arg nafith_icon "$NAFITH_ICON" --arg nafith_result "$NAFITH_RESULT" \
+          --arg profile_icon "$PROFILE_ICON" --arg profile_result "$PROFILE_RESULT" \
           --arg report_url "$REPORT_URL" --arg run_url "$RUN_URL" \
           '{
             blocks: [
@@ -370,7 +439,8 @@ jobs:
               { type: "section", text: { type: "mrkdwn", text: (
                   $crm_icon + " *CRM:* " + $crm_result + "\n" +
                   $division_icon + " *Division:* " + $division_result + "\n" +
-                  $nafith_icon + " *Nafith Login:* " + $nafith_result
+                  $nafith_icon + " *Nafith Login:* " + $nafith_result + "\n" +
+                  $profile_icon + " *Profile:* " + $profile_result
               ) } },
               { type: "divider" },
               { type: "context", elements: [
