@@ -6,7 +6,7 @@ backing admin/APIs (`ops-merath.api.azm-dev.com`).
 
 ## Structure
 
-- `tests/` — spec files, grouped by domain (`crm`, `divisions-flows`, `nafith-login`).
+- `tests/` — spec files, grouped by domain (`crm`, `divisions-flows`, `nafath-login`).
 - `pages/` + `locators/` — page-object model. One page object per screen/flow, each with its own
   locator class. For a substantial domain (cash division, investment division), each page object
   gets its own `*.locators.ts` file. For a small feature made of several tightly-coupled screens
