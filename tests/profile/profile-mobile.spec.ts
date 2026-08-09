@@ -3,7 +3,7 @@ import { env } from '../../config/env';
 import { DataPreparation } from '../../steps/data-preparation';
 import { ProfileLocators } from '../../locators/profile.locators';
 
-test.describe('Profile', () => {
+test.describe('Profile - Mobile number', () => {
   test('Heir logs in and views their profile @profile', async ({ seederPage, request }) => {
     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
 

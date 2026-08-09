@@ -3,7 +3,7 @@
 Beneficiary-facing profile page at `/my-profile?type=profile`. Explored by logging in as a
 seeded heir (`SeederPage.loginAsUser`, same mechanism as CRM help-center's "Login as User" —
 see `specs/crm-help-center.md`) and clicking "الملف الشخصي" in the side nav. Existing coverage:
-`tests/profile/profile.spec.ts` (basic data + mobile edit) and `tests/profile/bankAccount.spec.ts`
+`tests/profile/profile-mobile.spec.ts` (basic data + mobile edit) and `tests/profile/bankAccount.spec.ts`
 (bank account tab).
 
 ## First-time-heir redirect
