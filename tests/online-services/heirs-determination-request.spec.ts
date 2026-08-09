@@ -2,6 +2,7 @@ import { test, expect } from '../../fixtures/base.fixture';
 import { env } from '../../config/env';
 import { GenerateSeedDataClient, SeedIdentity, WitnessSeedData } from '../../api/clients/generate-seed-data.client';
 import { nafathLogin } from '../../steps/nafath-login';
+import { deleteSeed } from '../../steps/delete-seed';
 import { MainNavPage } from '../../pages/common-pages/main-nav.page';
 import { OnlineServicesPage } from '../../pages/online-services-pages/online-services.page';
 import { ServiceDetailsPage } from '../../pages/online-services-pages/service-details.page';
@@ -248,10 +249,7 @@ test.describe('Inheritance request', () => {
     });
 
     await test.step('Delete the seed', async () => {
-      const generateSeedDataClient = new GenerateSeedDataClient(request, env.tawtheeq.baseURL);
-      const response = await generateSeedDataClient.deleteSeed(requestNumber);
-
-      expect(response.ok()).toBeTruthy();
+      await deleteSeed(request, env.tawtheeq.baseURL, requestNumber);
     });
   });
 });
