@@ -1,5 +1,5 @@
-import { BasePage } from './base.page';
-import { MyOrdersLocators } from '../locators/my-orders.locators';
+import { BasePage } from '../base.page';
+import { MyOrdersLocators } from '../../locators/common-locators/my-orders.locators';
 
 export class MyOrdersPage extends BasePage {
   private readonly locators = new MyOrdersLocators(this.page);

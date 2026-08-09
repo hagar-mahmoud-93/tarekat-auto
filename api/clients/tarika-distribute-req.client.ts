@@ -1,6 +1,6 @@
 import { APIRequestContext } from '@playwright/test';
 import { env } from '../../config/env';
-import { SeedResult } from '../../pages/seeder.page';
+import { SeedResult } from '../../pages/admin-pages/seeder.page';
 import { loggedPost } from './log-request';
 
 export class TarikaDistributeReqClient {

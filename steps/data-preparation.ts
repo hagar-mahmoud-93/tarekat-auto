@@ -1,7 +1,7 @@
 import { APIRequestContext, Page } from '@playwright/test';
 import { expect } from '../fixtures/base.fixture';
 import { env } from '../config/env';
-import { SeederPage, SeedResult, DivisionType } from '../pages/seeder.page';
+import { SeederPage, SeedResult, DivisionType } from '../pages/admin-pages/seeder.page';
 import { TawtheeqClient } from '../api/clients/tawtheeq.client';
 import { fillMobileNumberIfPrompted } from './fill-mobile-number';
 

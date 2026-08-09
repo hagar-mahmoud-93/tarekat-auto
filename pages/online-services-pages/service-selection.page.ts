@@ -1,5 +1,5 @@
-import { BasePage } from './base.page';
-import { ServiceSelectionLocators } from '../locators/service-selection.locators';
+import { BasePage } from '../base.page';
+import { ServiceSelectionLocators } from '../../locators/online-services-locators/service-selection.locators';
 
 export class ServiceSelectionPage extends BasePage {
   private readonly locators = new ServiceSelectionLocators(this.page);

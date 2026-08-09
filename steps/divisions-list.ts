@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import { expect } from '../fixtures/base.fixture';
 import { RequestsPage } from '../pages/division-pages/requests.page';
-import { SeedResult } from '../pages/seeder.page';
+import { SeedResult } from '../pages/admin-pages/seeder.page';
 
 export class DivisionsList {
   constructor(

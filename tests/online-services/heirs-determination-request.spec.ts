@@ -1,20 +1,20 @@
-import { test, expect } from '../fixtures/base.fixture';
-import { env } from '../config/env';
-import { GenerateSeedDataClient, SeedIdentity, WitnessSeedData } from '../api/clients/generate-seed-data.client';
-import { nafathLogin } from '../steps/nafath-login';
-import { MainNavPage } from '../pages/main-nav.page';
-import { OnlineServicesPage } from '../pages/online-services.page';
-import { ServiceDetailsPage } from '../pages/service-details.page';
-import { ServiceSelectionPage } from '../pages/service-selection.page';
-import { TermsAndConditionsPage } from '../pages/terms-and-conditions.page';
-import { ApplicantDataPage } from '../pages/heirs-determination-pages/applicant-data.page';
-import { WizardNavPage } from '../pages/heirs-determination-pages/wizard-nav.page';
-import { DeceasedDataPage } from '../pages/heirs-determination-pages/deceased-data.page';
-import { HeirsSelectionPage } from '../pages/heirs-determination-pages/heirs-selection.page';
-import { HeirsListPage } from '../pages/heirs-determination-pages/heirs-list.page';
-import { WitnessDataPage } from '../pages/heirs-determination-pages/witness-data.page';
-import { RequestPreviewPage } from '../pages/heirs-determination-pages/request-preview.page';
-import { MyOrdersPage } from '../pages/my-orders.page';
+import { test, expect } from '../../fixtures/base.fixture';
+import { env } from '../../config/env';
+import { GenerateSeedDataClient, SeedIdentity, WitnessSeedData } from '../../api/clients/generate-seed-data.client';
+import { nafathLogin } from '../../steps/nafath-login';
+import { MainNavPage } from '../../pages/common-pages/main-nav.page';
+import { OnlineServicesPage } from '../../pages/online-services-pages/online-services.page';
+import { ServiceDetailsPage } from '../../pages/online-services-pages/service-details.page';
+import { ServiceSelectionPage } from '../../pages/online-services-pages/service-selection.page';
+import { TermsAndConditionsPage } from '../../pages/heirs-determination-pages/terms-and-conditions.page';
+import { ApplicantDataPage } from '../../pages/heirs-determination-pages/applicant-data.page';
+import { WizardNavPage } from '../../pages/heirs-determination-pages/wizard-nav.page';
+import { DeceasedDataPage } from '../../pages/heirs-determination-pages/deceased-data.page';
+import { HeirsSelectionPage } from '../../pages/heirs-determination-pages/heirs-selection.page';
+import { HeirsListPage } from '../../pages/heirs-determination-pages/heirs-list.page';
+import { WitnessDataPage } from '../../pages/heirs-determination-pages/witness-data.page';
+import { RequestPreviewPage } from '../../pages/heirs-determination-pages/request-preview.page';
+import { MyOrdersPage } from '../../pages/common-pages/my-orders.page';
 
 function randomMobileNumber(): string {
   let digits = '';

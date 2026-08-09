@@ -11,7 +11,7 @@ import { TarikaDistributeReqClient } from '../../api/clients/tarika-distribute-r
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 import { DivisionDashboardPage } from '../../pages/division-pages/division-dashboard.page';
 import { SubmitTarikaFundsResults } from '../../steps/submit-tarika-funds-results';
-import { DivisionType } from '../../pages/seeder.page';
+import { DivisionType } from '../../pages/admin-pages/seeder.page';
 
 test.describe('Inheritance seeder', () => {
 

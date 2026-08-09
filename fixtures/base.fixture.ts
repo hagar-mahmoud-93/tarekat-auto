@@ -1,7 +1,7 @@
 
 import { test as base } from '@playwright/test';
-import { LoginPage } from '../pages/login.page';
-import { SeederPage } from '../pages/seeder.page';
+import { LoginPage } from '../pages/common-pages/login.page';
+import { SeederPage } from '../pages/admin-pages/seeder.page';
 
 type Fixtures = {
   loginPage: LoginPage;

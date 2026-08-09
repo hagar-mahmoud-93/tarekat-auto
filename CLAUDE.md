@@ -6,13 +6,14 @@ backing admin/APIs (`ops-merath.api.azm-dev.com`).
 
 ## Structure
 
-- `tests/` — spec files, grouped by domain (`crm`, `divisionsFlows`, `nafithLogin`).
+- `tests/` — spec files, grouped by domain (`crm`, `divisions-flows`, `nafith-login`).
 - `pages/` + `locators/` — page-object model. One page object per screen/flow, each with its own
   locator class. For a substantial domain (cash division, investment division), each page object
   gets its own `*.locators.ts` file. For a small feature made of several tightly-coupled screens
   (e.g. a help center with a hub + FAQ + contact-us + wizard), keep one locator class per page
   object but co-locate all of them in a single `<feature>.locators.ts` file — avoids locator-file
-  sprawl for what's really one feature. See `locators/help-center.locators.ts` for the pattern.
+  sprawl for what's really one feature. See `locators/crm-locators/help-center.locators.ts` for
+  the pattern.
 - `steps/` — reusable multi-step flows shared across specs (e.g. seeding a case, filling prompts).
 - `fixtures/base.fixture.ts` — custom Playwright fixtures (`loginPage`, `seederPage`).
 - `api/clients/` — direct API clients used to seed/verify data outside the UI.
@@ -32,10 +33,14 @@ No npm scripts defined yet — run Playwright directly, e.g. `npx playwright tes
   full area map — beneficiary Help Center pages, the new-ticket wizard, how to get a logged-in
   beneficiary session without Nafath (seeder → "Login as User"), the Django admin `ticketing` /
   `support_dashboard` apps, and a known verify-applicant/Dynamics-CRM connectivity issue.
-- **Cash division** (`tests/divisionsFlows/`, "الأموال النقدية"): see `specs/cash-division.md`
+- **Cash division** (`tests/divisions-flows/`, "الأموال النقدية"): see `specs/cash-division.md`
   for the full area map — seeding a case with a given asset mix/heir mutation, the beneficiary
   → all-heirs → auditor → Tarika funds-status/settlement flow, division blockers (minor/dead
   heir), and a checklist for adding new cases.
+- **Heirs determination request** (`tests/online-services/`, "إصدار حصر الورثة"): see
+  `specs/heirs-determination-request.md` for the full area map — Nafath login, seeding
+  deceased/witness identities via the Tawtheeq mock seeder, the full wizard step sequence with its
+  known UI quirks, and the seed-cleanup step every case must end with.
 
 ## Conventions
 

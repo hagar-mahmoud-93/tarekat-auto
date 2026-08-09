@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
-import { SeederPage } from '../pages/seeder.page';
-import { AdminLoginPage } from '../pages/admin-login.page';
+import { SeederPage } from '../pages/admin-pages/seeder.page';
+import { AdminLoginPage } from '../pages/admin-pages/admin-login.page';
 import { AdminIsMockDisabledPage } from '../pages/division-preconditions-pages/admin-is-mock-disabled.page';
 import { ConfigurationsServicePage } from '../pages/division-preconditions-pages/configurations-service.page';
 import { WaffleFlagsPage } from '../pages/division-preconditions-pages/waffle-flags.page';

@@ -1,6 +1,6 @@
 import { APIResponse } from '@playwright/test';
 import { BaseApiClient } from './base.client';
-import { SeedCaseJson } from '../../pages/seeder.page';
+import { SeedCaseJson } from '../../pages/admin-pages/seeder.page';
 import { env } from '../../config/env';
 import { loggedPost } from './log-request';
 

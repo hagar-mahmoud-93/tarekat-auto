@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 import { BasePage } from '../base.page';
-import { ContactUsLocators } from '../../locators/help-center.locators';
+import { ContactUsLocators } from '../../locators/crm-locators/help-center.locators';
 
 export class ContactUsPage extends BasePage {
   private readonly locators = new ContactUsLocators(this.page);

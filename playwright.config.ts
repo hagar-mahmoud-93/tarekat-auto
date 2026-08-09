@@ -80,7 +80,7 @@ export default defineConfig({
      * a divisionsFlows test is actually part of the run — see 'divisionsFlows' dependency below. */
     {
       name: 'division-preconditions',
-      testDir: './tests/divisionsFlows',
+      testDir: './tests/divisions-flows',
       testMatch: /.*\.setup\.ts/,
       use: {
         ...devices['Desktop Chrome'],
@@ -95,7 +95,7 @@ export default defineConfig({
     },
     {
       name: 'divisionsFlows',
-      testDir: './tests/divisionsFlows',
+      testDir: './tests/divisions-flows',
       testIgnore: /.*\.setup\.ts/,
       dependencies: ['division-preconditions'],
       use: {
@@ -112,7 +112,7 @@ export default defineConfig({
     {
       name: 'Google Chrome',
       testDir: './tests',
-      testIgnore: /divisionsFlows[\\/]/,
+      testIgnore: /divisions-flows[\\/]/,
       use: {
         ...devices['Desktop Chrome'],
         channel: 'chrome',
