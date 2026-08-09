@@ -1,6 +1,6 @@
 import { APIResponse } from '@playwright/test';
 import { BaseApiClient } from './base.client';
-import { loggedPost } from './log-request';
+import { loggedDelete, loggedPost } from './log-request';
 
 function randomDigits(length: number): string {
   let digits = '';
@@ -208,5 +208,16 @@ export class GenerateSeedDataClient extends BaseApiClient {
       firstWitness,
       secondWitness,
     };
+  }
+
+  /** Deletes a previously seeded case by its requestNumber, so seeder state doesn't accumulate across runs. */
+  async deleteSeed(requestNumber: string): Promise<APIResponse> {
+    return loggedDelete(this.request, 'DeleteSeed', `${this.baseURL}/api/seeder/seeds/${requestNumber}`, {
+      headers: {
+        accept: '*/*',
+        origin: this.baseURL,
+        referer: `${this.baseURL}/seeds-preview`,
+      },
+    });
   }
 }

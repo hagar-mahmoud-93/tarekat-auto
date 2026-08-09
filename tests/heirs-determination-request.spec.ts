@@ -246,5 +246,12 @@ test.describe('Inheritance request', () => {
 
       await expect(myOrdersPage.requestNumberResult(requestNumber)).toBeVisible();
     });
+
+    await test.step('Delete the seed', async () => {
+      const generateSeedDataClient = new GenerateSeedDataClient(request, env.tawtheeq.baseURL);
+      const response = await generateSeedDataClient.deleteSeed(requestNumber);
+
+      expect(response.ok()).toBeTruthy();
+    });
   });
 });
