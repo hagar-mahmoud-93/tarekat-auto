@@ -1,0 +1,8 @@
+[
+  {
+    "method": "GET",
+    "url": "https://ops-merath.api.azm-dev.com/admin/waffle/flag/10/change/",
+    "status": 502,
+    "statusText": ""
+  }
+]

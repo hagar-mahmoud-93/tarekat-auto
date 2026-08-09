@@ -1,0 +1,24 @@
+[
+  {
+    "method": "GET",
+    "url": "https://ops-merath.api.azm-dev.com/jet/jsi18n/",
+    "status": 502,
+    "statusText": ""
+  },
+  {
+    "method": "GET",
+    "url": "https://ops-merath.api.azm-dev.com/jet/jsi18n/",
+    "failure": "net::ERR_ABORTED"
+  },
+  {
+    "method": "GET",
+    "url": "https://ops-merath.api.azm-dev.com/jet/jsi18n/",
+    "status": 502,
+    "statusText": ""
+  },
+  {
+    "method": "GET",
+    "url": "https://ops-merath.api.azm-dev.com/jet/jsi18n/",
+    "failure": "net::ERR_ABORTED"
+  }
+]

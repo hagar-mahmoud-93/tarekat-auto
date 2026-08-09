@@ -1,0 +1,8 @@
+[
+  {
+    "method": "GET",
+    "url": "https://ops-merath.api.azm-dev.com/admin/inheritance_seeder/inheritanceseeder/seed/",
+    "status": 502,
+    "statusText": ""
+  }
+]
