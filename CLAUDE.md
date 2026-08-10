@@ -39,6 +39,10 @@ No npm scripts defined yet — run Playwright directly, e.g. `npx playwright tes
 - **Profile** (`tests/profile/`, "الملف الشخصي"): see `specs/profile.md` for the full area map —
   the first-time-heir redirect dialog, the two-tab page structure (basic data + bank account),
   and which fields/flows are and aren't covered yet.
+- **Estate inventory** (no tests yet, "حصر التركة"): see `specs/estate-inventory.md` for the area
+  map — the case-details tab structure (5 tabs, not just the 2 `RequestsLocators` currently
+  covers), what the `حصر التركة` tab shows for a seeded case, and open questions for whoever
+  automates it next.
 
 ## Conventions
 
