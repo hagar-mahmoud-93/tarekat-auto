@@ -5,9 +5,9 @@ export class ApplicantDataPage extends BasePage {
   private readonly locators = new ApplicantDataLocators(this.page);
 
   /** Opens the صفة مقدم الطلب dropdown and picks the option matching the given name. */
-  async selectRelationToInheritor(name: string) {
-    await this.locators.relationToInheritorDropdown().click();
-    await this.locators.relationToInheritorOption(name).click();
+  async selectBeneficiaryType(name: string) {
+    await this.locators.beneficiaryTypeDropdown().click();
+    await this.locators.beneficiaryTypeOption(name).click();
   }
 
   async fillMobileNumber(mobileNumber: string) {

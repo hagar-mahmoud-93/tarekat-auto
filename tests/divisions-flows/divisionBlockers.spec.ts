@@ -2,7 +2,7 @@ import { test, expect } from '../../fixtures/base.fixture';
 import { env } from '../../config/env';
 import { CashDivisionsPage } from '../../pages/division-pages/cash-divisions.page';
 import { InvestmentDivisionsPage } from '../../pages/division-pages/investment-divisions.page';
-import { DataPreparation } from '../../steps/data-preparation';
+import { DataPreparation } from '../../steps/inheritance-seeder-data-preparation';
 import { DivisionsList } from '../../steps/divisions-list';
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 

@@ -72,8 +72,8 @@ division flows).
      from the Tawtheeq seed).
    - `selectPreviousDocumentExists('لا')` — answers "هل توجد وثيقة حصر ورثة سابقة للمتوفى؟"; the
      radio's visual box covers the actual input, so the click is forced (`{ force: true }`).
-   - **Save and continue** (`WizardNavPage.saveAndContinue()`) ×2 to get past the مراجعة (review)
-     sub-step, landing on بيانات الوفاة.
+   - **Save and continue** (`steps/save-and-continue.ts::saveAndContinue(page)`) ×2 to get past
+     the مراجعة (review) sub-step, landing on بيانات الوفاة.
 9. **بيانات المورّث (deceased data)** — `DeceasedDataPage`:
    - `fillIdNumber(deceasedIdentity.identityNumber)`,
      `selectIdTypeForIdentityType(deceasedIdentity.identityType)` (نوع الهوية: هوية وطنية for
@@ -139,9 +139,11 @@ its own locator class.
 
 - `pages/heirs-determination-pages/` + `locators/heirs-determination-locators/` — one file pair
   per wizard screen: `applicant-data`, `deceased-data`, `heirs-selection`, `heirs-list`,
-  `witness-data`, `request-preview`, `wizard-nav` (the shared حفظ ومتابعة control used across every
-  step), plus `terms-and-conditions` (moved here since it's only consumed by this flow, despite
-  living next to the CRM Help Center's locators earlier in this area's history).
+  `witness-data`, `request-preview`, plus `terms-and-conditions` (moved here since it's only
+  consumed by this flow, despite living next to the CRM Help Center's locators earlier in this
+  area's history). The shared حفظ ومتابعة control isn't a page object — it's the
+  `steps/save-and-continue.ts::saveAndContinue(page)` step, since it's just one button reused
+  identically across every wizard screen.
 - `pages/online-services-pages/` + `locators/online-services-locators/` — the services catalog
   screens leading into the wizard: `online-services` (catalog listing), `service-details`,
   `service-selection`.
@@ -173,7 +175,7 @@ its own locator class.
    hardcoding values in the spec.
 2. If it's a variant of the same happy path (e.g. صفة مقدم الطلب = وكالة/agency, or "نعم" for a
    previous حصر ورثة document), copy `tests/online-services/heirs-determination-request.spec.ts`
-   and adjust the relevant `test.step`s — the wizard's screen sequence and `WizardNavPage.saveAndContinue()`
+   and adjust the relevant `test.step`s — the wizard's screen sequence and `saveAndContinue(page)`
    calls between them stay the same.
 3. Always end a new case the same way: read the submitted طلب حصر الورثة رقم from
    `RequestPreviewPage.getSubmittedRequestNumber()` and call

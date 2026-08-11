@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 
-export class MainNavLocators {
+export class MainMenuLocators {
   constructor(private readonly page: Page) {}
 
   /** The sidebar's "الخدمات الإلكترونية" item; the label is a plain div, so the click target is its parent. */

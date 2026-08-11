@@ -3,11 +3,11 @@ import { Page } from '@playwright/test';
 export class ApplicantDataLocators {
   constructor(private readonly page: Page) {}
 
-  relationToInheritorDropdown() {
+  beneficiaryTypeDropdown() {
     return this.page.locator('#relationToInheritor');
   }
 
-  relationToInheritorOption(name: string) {
+  beneficiaryTypeOption(name: string) {
     return this.page.getByRole('option', { name });
   }
 

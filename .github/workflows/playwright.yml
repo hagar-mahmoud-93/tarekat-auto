@@ -6,8 +6,8 @@ on:
     branches: [ main, master ]
   # Fired by other repos' pipelines (e.g. BE/FE) when their change touches an area we cover here,
   # so we catch regressions before they merge. client_payload.label maps to a @tag on the relevant
-  # suite (@cash-division, @investment-division, @division, @nafath-login, @inheritance-request,
-  # ...) — see tests/ for the full set. No label runs the full suite.
+  # suite (@cash-division, @investment-division, @division, @inheritance-request, ...) — see
+  # tests/ for the full set. No label runs the full suite.
   repository_dispatch:
     types: [run-tests]
   # Manual trigger from the Actions tab — "Use workflow from" gives the branch picker for free;
@@ -23,7 +23,6 @@ on:
           - full
           - crm
           - division
-          - nafath-login
           - online-services
 jobs:
   # Resolves which suite(s) to run from either trigger, once, so the three suite jobs below don't
@@ -44,9 +43,8 @@ jobs:
         fi
         echo "label=$LABEL" >> "$GITHUB_OUTPUT"
 
-  # Named per domain (crm / division / nafath-login / online-services) so each shows as its own
-  # check in the PR/Actions UI and runs in parallel — they only share the `scope` dependency, not
-  # each other.
+  # Named per domain (crm / division / online-services) so each shows as its own check in the
+  # PR/Actions UI and runs in parallel — they only share the `scope` dependency, not each other.
   crm:
     needs: scope
     if: ${{ needs.scope.outputs.label == 'full' || needs.scope.outputs.label == 'crm' }}
@@ -99,29 +97,6 @@ jobs:
       if: ${{ !cancelled() }}
       with:
         name: playwright-report-division
-        path: playwright-report/
-        retention-days: 30
-
-  nafath-login:
-    needs: scope
-    if: ${{ needs.scope.outputs.label == 'full' || needs.scope.outputs.label == 'nafath-login' }}
-    timeout-minutes: 60
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-    - name: Install dependencies
-      run: npm ci
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Run Playwright tests
-      run: npx playwright test --grep "@nafath-login"
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report-nafath-login
         path: playwright-report/
         retention-days: 30
 

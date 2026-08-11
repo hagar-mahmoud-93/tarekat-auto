@@ -40,14 +40,17 @@ export type SeedDataResult = {
   secondWitness: WitnessSeedData;
 };
 
-export class GenerateSeedDataClient extends BaseApiClient {
+export class SeedManagementClient extends BaseApiClient {
   /** Seeds a Tawtheeq case with fresh id/identityNumber/identityType for the deceased, heir, and witnesses on each call. */
   async seed(): Promise<SeedDataResult> {
     const deceasedIdentity = randomIdentity();
-    const deceasedBirthDateHijri = '1377/07/19';
+    const deceasedBirthDateHijri = '1377/08/17';
     const beneficiaryRelationshipType = 'ابن';
     const heirIdentity = randomIdentity();
-    const witnessIdentities = [randomIdentity(), randomIdentity()];
+    const witnessIdentities = [
+      { id: randomId(), identityNumber: '1082986272', identityType: 1 as const },
+      { id: randomId(), identityNumber: '1090888353', identityType: 1 as const },
+    ];
     const firstWitnessPhoneNumber = '0566787654';
     const firstWitnessBirthDateHijri = '1400/09/25';
     const secondWitnessPhoneNumber = '0566787456';
@@ -138,11 +141,11 @@ export class GenerateSeedDataClient extends BaseApiClient {
           id: witnessIdentities[0].id,
           identityNumber: witnessIdentities[0].identityNumber,
           identityType: witnessIdentities[0].identityType,
-          firstName: 'احمد',
-          middleName: 'محمد',
-          lastName: 'احمد',
-          familyName: 'عبدالله',
-          fullName: 'احمد محمد احمد عبدالله',
+          firstName: 'محمد',
+          middleName: 'عون',
+          lastName: 'سعيد',
+          familyName: 'السعودي',
+          fullName: 'محمد عون سعيد السعودي',
           gender: 1,
           nationalityId: 1,
           birthDate: '1980-08-07T00:00:00',
@@ -154,11 +157,11 @@ export class GenerateSeedDataClient extends BaseApiClient {
           id: witnessIdentities[1].id,
           identityNumber: witnessIdentities[1].identityNumber,
           identityType: witnessIdentities[1].identityType,
-          firstName: 'عبدالله',
-          middleName: 'احمد',
-          lastName: 'عبدالله',
-          familyName: 'الاحمد',
-          fullName: 'عبدالله احمد عبدالله الاحمد',
+          firstName: 'رغد',
+          middleName: 'سعد',
+          lastName: 'صالح',
+          familyName: 'العقيل',
+          fullName: 'رغد سعد صالح العقيل',
           gender: 1,
           nationalityId: 1,
           birthDate: '1990-08-13T00:00:00',

@@ -1,18 +1,11 @@
 import { BasePage } from '../base.page';
 import { DeceasedDataLocators } from '../../locators/heirs-determination-locators/deceased-data.locators';
+import { uploadPlaceholderFile } from '../../steps/upload-file';
 
 const ID_TYPE_BY_IDENTITY_TYPE: Record<1 | 2, string> = {
   1: 'هوية وطنية',
   2: 'إقامة',
 };
-
-/** 1x1 transparent PNG, used to satisfy the pdf/jpg/jpeg/png/bmp attachment requirement. */
-const PLACEHOLDER_PNG_BASE64 =
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
-
-function placeholderImageFile(fileName: string) {
-  return { name: fileName, mimeType: 'image/png', buffer: Buffer.from(PLACEHOLDER_PNG_BASE64, 'base64') };
-}
 
 export class DeceasedDataPage extends BasePage {
   private readonly locators = new DeceasedDataLocators(this.page);
@@ -32,11 +25,11 @@ export class DeceasedDataPage extends BasePage {
   }
 
   async uploadFamilyRegister(fileName: string = 'family-register.png') {
-    await this.locators.familyRegisterFileInput().setInputFiles(placeholderImageFile(fileName));
+    await uploadPlaceholderFile(this.locators.familyRegisterFileInput(), fileName);
   }
 
   async uploadDeathCertificate(fileName: string = 'death-certificate.png') {
-    await this.locators.deathCertificateFileInput().setInputFiles(placeholderImageFile(fileName));
+    await uploadPlaceholderFile(this.locators.deathCertificateFileInput(), fileName);
   }
 
   async verify() {

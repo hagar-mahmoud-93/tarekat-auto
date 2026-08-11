@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 
-export class ServiceSelectionLocators {
+export class HeirsDeterminationServiceSelectionLocators {
   constructor(private readonly page: Page) {}
 
   /** The arrow icon button on a service-selection card, matched by the card's title text. */
