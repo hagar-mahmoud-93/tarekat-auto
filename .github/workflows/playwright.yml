@@ -6,10 +6,13 @@ on:
     branches: [ main, master ]
   # Fired by other repos' pipelines (e.g. BE/FE) when their change touches an area we cover here,
   # so we catch regressions before they merge. client_payload.label maps to a @tag on the relevant
-  # suite (@cash-division, @investment-division, @division, @inheritance-request, ...) — see
-  # tests/ for the full set. No label runs the full suite.
+  # suite (@cash-division, @investment-division, @division, @inheritance-request, @profile, ...) —
+  # see tests/ for the full set. No label runs the full suite.
   repository_dispatch:
     types: [run-tests]
+  # Daily full-suite run at 4:18pm Riyadh time (UTC+3, no DST) = 13:18 UTC.
+  schedule:
+    - cron: '27 13 * * *'
   # Manual trigger from the Actions tab — "Use workflow from" gives the branch picker for free;
   # this input adds a suite picker alongside it.
   workflow_dispatch:
@@ -24,6 +27,7 @@ on:
           - crm
           - division
           - online-services
+          - profile
 jobs:
   # Resolves which suite(s) to run from either trigger, once, so the three suite jobs below don't
   # each repeat the same parsing/validation of an untrusted external payload.
@@ -43,30 +47,72 @@ jobs:
         fi
         echo "label=$LABEL" >> "$GITHUB_OUTPUT"
 
-  # Named per domain (crm / division / online-services) so each shows as its own check in the
-  # PR/Actions UI and runs in parallel — they only share the `scope` dependency, not each other.
+  # Named per domain (crm / division / online-services / profile) so each shows as its own check
+  # in the PR/Actions UI and runs in parallel — they only share the `scope` dependency, not each
+  # other.
   crm:
     needs: scope
     if: ${{ needs.scope.outputs.label == 'full' || needs.scope.outputs.label == 'crm' }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    outputs:
+      passed: ${{ steps.summary.outputs.passed }}
+      failed: ${{ steps.summary.outputs.failed }}
+      skipped: ${{ steps.summary.outputs.skipped }}
+      flaky: ${{ steps.summary.outputs.flaky }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+        cache: 'npm'
     - name: Install dependencies
       run: npm ci
+    # Browser binaries are the slow part of "install --with-deps" — cache them by
+    # lockfile hash so a run only re-downloads when the Playwright version actually
+    # changes. OS-level deps (apt packages) aren't cacheable this way, so on a cache
+    # hit we still run install-deps for those, which is fast on the stock ubuntu-latest image.
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
     - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps
+    - name: Install Playwright OS dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: npx playwright install-deps
     - name: Run Playwright tests
       run: npx playwright test --grep "@crm"
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
-        name: playwright-report-crm
-        path: playwright-report/
+        name: allure-results-crm
+        path: allure-results/
         retention-days: 30
+    # Feeds the Slack notification's pass/fail/skipped/flaky counts — read from Playwright's
+    # own JSON reporter output (test-results/results.json), not Allure, since Allure results
+    # get merged across domains later and lose the per-domain breakdown by then.
+    - name: Extract test summary
+      id: summary
+      if: always()
+      run: |
+        if [ -f test-results/results.json ]; then
+          PASSED=$(jq '.stats.expected' test-results/results.json)
+          FAILED=$(jq '.stats.unexpected' test-results/results.json)
+          SKIPPED=$(jq '.stats.skipped' test-results/results.json)
+          FLAKY=$(jq '.stats.flaky' test-results/results.json)
+        else
+          PASSED=0; FAILED=0; SKIPPED=0; FLAKY=0
+        fi
+        {
+          echo "passed=$PASSED"
+          echo "failed=$FAILED"
+          echo "skipped=$SKIPPED"
+          echo "flaky=$FLAKY"
+        } >> "$GITHUB_OUTPUT"
 
   division:
     needs: scope
@@ -75,15 +121,35 @@ jobs:
       needs.scope.outputs.label == 'cash-division' || needs.scope.outputs.label == 'investment-division' }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    outputs:
+      passed: ${{ steps.summary.outputs.passed }}
+      failed: ${{ steps.summary.outputs.failed }}
+      skipped: ${{ steps.summary.outputs.skipped }}
+      flaky: ${{ steps.summary.outputs.flaky }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+        cache: 'npm'
     - name: Install dependencies
       run: npm ci
+    # Browser binaries are the slow part of "install --with-deps" — cache them by
+    # lockfile hash so a run only re-downloads when the Playwright version actually
+    # changes. OS-level deps (apt packages) aren't cacheable this way, so on a cache
+    # hit we still run install-deps for those, which is fast on the stock ubuntu-latest image.
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
     - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps
+    - name: Install Playwright OS dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: npx playwright install-deps
     - name: Run Playwright tests
       env:
         SCOPE_LABEL: ${{ needs.scope.outputs.label }}
@@ -96,9 +162,27 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
-        name: playwright-report-division
-        path: playwright-report/
+        name: allure-results-division
+        path: allure-results/
         retention-days: 30
+    - name: Extract test summary
+      id: summary
+      if: always()
+      run: |
+        if [ -f test-results/results.json ]; then
+          PASSED=$(jq '.stats.expected' test-results/results.json)
+          FAILED=$(jq '.stats.unexpected' test-results/results.json)
+          SKIPPED=$(jq '.stats.skipped' test-results/results.json)
+          FLAKY=$(jq '.stats.flaky' test-results/results.json)
+        else
+          PASSED=0; FAILED=0; SKIPPED=0; FLAKY=0
+        fi
+        {
+          echo "passed=$PASSED"
+          echo "failed=$FAILED"
+          echo "skipped=$SKIPPED"
+          echo "flaky=$FLAKY"
+        } >> "$GITHUB_OUTPUT"
 
   online-services:
     needs: scope
@@ -107,20 +191,269 @@ jobs:
       needs.scope.outputs.label == 'inheritance-request' }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    outputs:
+      passed: ${{ steps.summary.outputs.passed }}
+      failed: ${{ steps.summary.outputs.failed }}
+      skipped: ${{ steps.summary.outputs.skipped }}
+      flaky: ${{ steps.summary.outputs.flaky }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+        cache: 'npm'
     - name: Install dependencies
       run: npm ci
+    # Browser binaries are the slow part of "install --with-deps" — cache them by
+    # lockfile hash so a run only re-downloads when the Playwright version actually
+    # changes. OS-level deps (apt packages) aren't cacheable this way, so on a cache
+    # hit we still run install-deps for those, which is fast on the stock ubuntu-latest image.
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
     - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps
+    - name: Install Playwright OS dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: npx playwright install-deps
     - name: Run Playwright tests
       run: npx playwright test --grep "@inheritance-request"
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
-        name: playwright-report-online-services
-        path: playwright-report/
+        name: allure-results-online-services
+        path: allure-results/
         retention-days: 30
+    - name: Extract test summary
+      id: summary
+      if: always()
+      run: |
+        if [ -f test-results/results.json ]; then
+          PASSED=$(jq '.stats.expected' test-results/results.json)
+          FAILED=$(jq '.stats.unexpected' test-results/results.json)
+          SKIPPED=$(jq '.stats.skipped' test-results/results.json)
+          FLAKY=$(jq '.stats.flaky' test-results/results.json)
+        else
+          PASSED=0; FAILED=0; SKIPPED=0; FLAKY=0
+        fi
+        {
+          echo "passed=$PASSED"
+          echo "failed=$FAILED"
+          echo "skipped=$SKIPPED"
+          echo "flaky=$FLAKY"
+        } >> "$GITHUB_OUTPUT"
+
+  profile:
+    needs: scope
+    if: ${{ needs.scope.outputs.label == 'full' || needs.scope.outputs.label == 'profile' }}
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    outputs:
+      passed: ${{ steps.summary.outputs.passed }}
+      failed: ${{ steps.summary.outputs.failed }}
+      skipped: ${{ steps.summary.outputs.skipped }}
+      flaky: ${{ steps.summary.outputs.flaky }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+        cache: 'npm'
+    - name: Install dependencies
+      run: npm ci
+    # Browser binaries are the slow part of "install --with-deps" — cache them by
+    # lockfile hash so a run only re-downloads when the Playwright version actually
+    # changes. OS-level deps (apt packages) aren't cacheable this way, so on a cache
+    # hit we still run install-deps for those, which is fast on the stock ubuntu-latest image.
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+    - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      run: npx playwright install --with-deps
+    - name: Install Playwright OS dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: npx playwright install-deps
+    - name: Run Playwright tests
+      run: npx playwright test --grep "@profile"
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: allure-results-profile
+        path: allure-results/
+        retention-days: 30
+    - name: Extract test summary
+      id: summary
+      if: always()
+      run: |
+        if [ -f test-results/results.json ]; then
+          PASSED=$(jq '.stats.expected' test-results/results.json)
+          FAILED=$(jq '.stats.unexpected' test-results/results.json)
+          SKIPPED=$(jq '.stats.skipped' test-results/results.json)
+          FLAKY=$(jq '.stats.flaky' test-results/results.json)
+        else
+          PASSED=0; FAILED=0; SKIPPED=0; FLAKY=0
+        fi
+        {
+          echo "passed=$PASSED"
+          echo "failed=$FAILED"
+          echo "skipped=$SKIPPED"
+          echo "flaky=$FLAKY"
+        } >> "$GITHUB_OUTPUT"
+
+  # Merges the results from all four domain jobs into a single Allure report (one history,
+  # one set of trend graphs) instead of four independent per-domain reports.
+  publish-report:
+    needs: [crm, division, online-services, profile]
+    # Runs even if a domain job didn't execute for this trigger's scope (skipped, not failed).
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # Serializes gh-pages publishes: this job reads the current gh-pages content, merges in new
+    # results, then overwrites the whole branch — two overlapping runs can race and the second to
+    # start (not finish) clobbers the first's update with stale data it read before the first push.
+    concurrency:
+      group: publish-report-gh-pages
+      cancel-in-progress: false
+    steps:
+    - uses: actions/checkout@v4
+    - name: Download allure results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: allure-results-*
+        path: allure-results-all
+        merge-multiple: true
+    - name: Load report history
+      uses: actions/checkout@v4
+      if: always()
+      continue-on-error: true
+      with:
+        ref: gh-pages
+        path: gh-pages
+    - name: Build combined report
+      uses: simple-elf/allure-report-action@v1.15
+      with:
+        allure_results: allure-results-all
+        allure_history: allure-history
+        allure_report: allure-report
+        gh_pages: gh-pages
+    - name: Fix report ownership
+      # The allure-report-action runs as root in a Docker container, so allure-history/ ends up
+      # root-owned on the runner's filesystem — reclaim it before the runner user writes to it.
+      if: always()
+      run: |
+        mkdir -p allure-history
+        sudo chown -R "$(id -u):$(id -g)" allure-history
+    - name: Publish report to GitHub Pages
+      if: always()
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: allure-history
+
+  # Slack ping for the unattended daily run, plus manual workflow_dispatch runs so the
+  # notification path can be tested on demand — push/PR runs still skip it since those
+  # already surface results in the Actions UI or PR checks in front of whoever triggered them.
+  notify-slack:
+    needs: [crm, division, online-services, profile, publish-report]
+    if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Send Slack notification
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        CRM_RESULT: ${{ needs.crm.result }}
+        DIVISION_RESULT: ${{ needs.division.result }}
+        ONLINE_SERVICES_RESULT: ${{ needs.online-services.result }}
+        PROFILE_RESULT: ${{ needs.profile.result }}
+        CRM_PASSED: ${{ needs.crm.outputs.passed }}
+        CRM_FAILED: ${{ needs.crm.outputs.failed }}
+        CRM_SKIPPED: ${{ needs.crm.outputs.skipped }}
+        CRM_FLAKY: ${{ needs.crm.outputs.flaky }}
+        DIVISION_PASSED: ${{ needs.division.outputs.passed }}
+        DIVISION_FAILED: ${{ needs.division.outputs.failed }}
+        DIVISION_SKIPPED: ${{ needs.division.outputs.skipped }}
+        DIVISION_FLAKY: ${{ needs.division.outputs.flaky }}
+        ONLINE_SERVICES_PASSED: ${{ needs.online-services.outputs.passed }}
+        ONLINE_SERVICES_FAILED: ${{ needs.online-services.outputs.failed }}
+        ONLINE_SERVICES_SKIPPED: ${{ needs.online-services.outputs.skipped }}
+        ONLINE_SERVICES_FLAKY: ${{ needs.online-services.outputs.flaky }}
+        PROFILE_PASSED: ${{ needs.profile.outputs.passed }}
+        PROFILE_FAILED: ${{ needs.profile.outputs.failed }}
+        PROFILE_SKIPPED: ${{ needs.profile.outputs.skipped }}
+        PROFILE_FLAKY: ${{ needs.profile.outputs.flaky }}
+        RUN_ID: ${{ github.run_id }}
+        REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        PASSED=$(( ${CRM_PASSED:-0} + ${DIVISION_PASSED:-0} + ${ONLINE_SERVICES_PASSED:-0} + ${PROFILE_PASSED:-0} ))
+        FAILED=$(( ${CRM_FAILED:-0} + ${DIVISION_FAILED:-0} + ${ONLINE_SERVICES_FAILED:-0} + ${PROFILE_FAILED:-0} ))
+        SKIPPED=$(( ${CRM_SKIPPED:-0} + ${DIVISION_SKIPPED:-0} + ${ONLINE_SERVICES_SKIPPED:-0} + ${PROFILE_SKIPPED:-0} ))
+        FLAKY=$(( ${CRM_FLAKY:-0} + ${DIVISION_FLAKY:-0} + ${ONLINE_SERVICES_FLAKY:-0} + ${PROFILE_FLAKY:-0} ))
+        RUN_AT=$(date -u '+%Y-%m-%d %H:%M UTC')
+
+        # Slack renders these :shortcode: forms as native icons — maps each job's
+        # result enum to one so the message reads at a glance instead of as plain text.
+        result_icon() {
+          case "$1" in
+            success) echo ':white_check_mark:';;
+            failure) echo ':x:';;
+            cancelled) echo ':no_entry_sign:';;
+            skipped) echo ':fast_forward:';;
+            *) echo ':grey_question:';;
+          esac
+        }
+        CRM_ICON=$(result_icon "$CRM_RESULT")
+        DIVISION_ICON=$(result_icon "$DIVISION_RESULT")
+        ONLINE_SERVICES_ICON=$(result_icon "$ONLINE_SERVICES_RESULT")
+        PROFILE_ICON=$(result_icon "$PROFILE_RESULT")
+
+        HEADER_ICON=':white_check_mark:'
+        for r in "$CRM_RESULT" "$DIVISION_RESULT" "$ONLINE_SERVICES_RESULT" "$PROFILE_RESULT"; do
+          if [ "$r" = "failure" ]; then HEADER_ICON=':x:'; fi
+        done
+
+        PAYLOAD=$(jq -n \
+          --arg header_icon "$HEADER_ICON" --arg run_id "$RUN_ID" --arg run_at "$RUN_AT" \
+          --arg passed "$PASSED" --arg failed "$FAILED" --arg skipped "$SKIPPED" --arg flaky "$FLAKY" \
+          --arg crm_icon "$CRM_ICON" --arg crm_result "$CRM_RESULT" \
+          --arg division_icon "$DIVISION_ICON" --arg division_result "$DIVISION_RESULT" \
+          --arg online_services_icon "$ONLINE_SERVICES_ICON" --arg online_services_result "$ONLINE_SERVICES_RESULT" \
+          --arg profile_icon "$PROFILE_ICON" --arg profile_result "$PROFILE_RESULT" \
+          --arg report_url "$REPORT_URL" --arg run_url "$RUN_URL" \
+          '{
+            blocks: [
+              { type: "header", text: { type: "plain_text", text: ($header_icon + " Tarekat E2E run #" + $run_id), emoji: true } },
+              { type: "section", fields: [
+                { type: "mrkdwn", text: (":white_check_mark: *Passed:* " + $passed) },
+                { type: "mrkdwn", text: (":x: *Failed:* " + $failed) },
+                { type: "mrkdwn", text: (":fast_forward: *Skipped:* " + $skipped) },
+                { type: "mrkdwn", text: (":warning: *Flaky:* " + $flaky) }
+              ] },
+              { type: "section", text: { type: "mrkdwn", text: (
+                  $crm_icon + " *CRM:* " + $crm_result + "\n" +
+                  $division_icon + " *Division:* " + $division_result + "\n" +
+                  $online_services_icon + " *Online Services:* " + $online_services_result + "\n" +
+                  $profile_icon + " *Profile:* " + $profile_result
+              ) } },
+              { type: "divider" },
+              { type: "context", elements: [
+                { type: "mrkdwn", text: (
+                  ":clock3: " + $run_at + "  •  <" + $report_url + "|:bar_chart: View Allure report>  •  <" + $run_url + "|:link: View run>"
+                ) }
+              ] }
+            ]
+          }')
+
+        curl -sf -X POST -H 'Content-type: application/json' \
+          --data "$PAYLOAD" \
+          "$SLACK_WEBHOOK_URL"
