@@ -11,10 +11,16 @@ export class TarikaFundsStatusClient {
 
   constructor(private readonly request: APIRequestContext) {}
 
-  async simulate(result: SeedResult, divisionId: string, divisionType: DivisionType): Promise<void> {
+  async simulate(
+    result: SeedResult,
+    divisionId: string,
+    divisionType: DivisionType,
+    transactionStatus: 'success' | 'failure' = 'success',
+  ): Promise<void> {
     const deceasedIdNumber = result.json.deceased.identityNumber;
     const tarikaRequestNumber = divisionId;
     const both = divisionType === 'cashBankInvestmentAccounts';
+    const status = transactionStatus === 'failure' ? TransactionStatus.Failure : TransactionStatus.Success;
 
     if (divisionType === 'cashBankAccounts' || both) {
       const bankAccounts = result.json.estateAssets.bankAccounts ?? [];
@@ -32,7 +38,7 @@ export class TarikaFundsStatusClient {
         emptyListKey: both ? 'InvestmentAccountStatusList' : undefined,
         accountList: bankAccounts.map((a) => ({
           IBAN: a.iban,
-          transactionStatus: TransactionStatus.Success,
+          transactionStatus: status,
           ExchangeRate: 1.0,
           ErrorDescription: null,
           ErrorCode: null,
@@ -55,7 +61,7 @@ export class TarikaFundsStatusClient {
         listKey: 'InvestmentAccountStatusList',
         emptyListKey: both ? 'BankAccountStatusList' : undefined,
         accountList: investments.map((a) => ({
-          transactionStatus: TransactionStatus.Success,
+          transactionStatus: status,
           AccountNumber: a.accountNumber,
         })),
         isCompleted: true,
