@@ -94,10 +94,10 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         channel: 'chrome',
         headless: !!process.env.CI,
-        // Maximizes the browser window for local headed runs; skipped on CI (headless, and
-        // toHaveScreenshot() baselines there are pinned to devices['Desktop Chrome']'s viewport).
+        // Headless has no real window to maximize, so CI gets a fixed full-HD viewport instead of
+        // --start-maximized; toHaveScreenshot() baselines are recorded at this size to match.
         ...(process.env.CI
-          ? {}
+          ? { viewport: { width: 1920, height: 1080 } }
           : { viewport: null, deviceScaleFactor: undefined, launchOptions: { args: ['--start-maximized'] } }),
       },
     },
@@ -110,10 +110,10 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         channel: 'chrome',
         headless: !!process.env.CI,
-        // Maximizes the browser window for local headed runs; skipped on CI (headless, and
-        // toHaveScreenshot() baselines there are pinned to devices['Desktop Chrome']'s viewport).
+        // Headless has no real window to maximize, so CI gets a fixed full-HD viewport instead of
+        // --start-maximized; toHaveScreenshot() baselines are recorded at this size to match.
         ...(process.env.CI
-          ? {}
+          ? { viewport: { width: 1920, height: 1080 } }
           : { viewport: null, deviceScaleFactor: undefined, launchOptions: { args: ['--start-maximized'] } }),
       },
     },
@@ -125,10 +125,10 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         channel: 'chrome',
         headless: !!process.env.CI,
-        // Maximizes the browser window for local headed runs; skipped on CI (headless, and
-        // toHaveScreenshot() baselines there are pinned to devices['Desktop Chrome']'s viewport).
+        // Headless has no real window to maximize, so CI gets a fixed full-HD viewport instead of
+        // --start-maximized; toHaveScreenshot() baselines are recorded at this size to match.
         ...(process.env.CI
-          ? {}
+          ? { viewport: { width: 1920, height: 1080 } }
           : { viewport: null, deviceScaleFactor: undefined, launchOptions: { args: ['--start-maximized'] } }),
       },
     },
