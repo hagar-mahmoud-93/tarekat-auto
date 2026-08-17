@@ -32,6 +32,10 @@ export class WitnessDataPage extends BasePage {
   async selectIdTypeForIdentityType(identityType: 1 | 2) {
     await this.locators.idTypeDropdown().click();
     await this.locators.idTypeOption(ID_TYPE_BY_IDENTITY_TYPE[identityType]).click();
+
+    // Selecting an option doesn't reliably auto-close the panel; if it's still open when the
+    // next action clicks through, it can intercept that click.
+    await this.page.keyboard.press('Escape');
   }
 
   async fillIdNumber(idNumber: string) {
