@@ -1,0 +1,18 @@
+[
+  {
+    "method": "GET",
+    "url": "https://www.googletagmanager.com/gtm.js?id=GTM-XXXXXX",
+    "failure": "net::ERR_BLOCKED_BY_ORB"
+  },
+  {
+    "method": "GET",
+    "url": "https://www.googletagmanager.com/gtm.js?id=GTM-XXXXXX",
+    "failure": "net::ERR_BLOCKED_BY_ORB"
+  },
+  {
+    "method": "GET",
+    "url": "https://ops-merath.api.azm-dev.com/api/1/inheritance/potential-heirs-list/2812306279/1958-03-09/2025-10-26/",
+    "status": 404,
+    "statusText": ""
+  }
+]
