@@ -11,13 +11,6 @@ export class WitnessDataLocators {
     return this.page.getByRole('option');
   }
 
-  /** The panel's own filter input (PrimeVue dropdown) - selecting an option doesn't synchronously
-   *  close the panel, so this is used to wait for it to actually disappear rather than assuming
-   *  a fixed action (e.g. Escape) closed it. */
-  relationToDeceasedFilterInput() {
-    return this.page.locator('input[aria-owns="relationToInheritor_list"]');
-  }
-
   mobileNumberInput() {
     return this.page.locator('#mobileNumber');
   }

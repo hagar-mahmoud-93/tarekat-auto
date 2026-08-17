@@ -19,13 +19,9 @@ export class WitnessDataPage extends BasePage {
     await this.locators.relationToDeceasedDropdown().click();
     await this.locators.relationToDeceasedOptions().first().click();
 
-    // Selecting an option doesn't reliably auto-close the panel, and Escape isn't a reliable way
-    // to force it either - focus after clicking the option isn't on the dropdown/filter input, so
-    // the panel's own Escape handler often doesn't fire. CI has seen its filter input (still
-    // rendered) intercept the next dropdown's click for hundreds of ms. Wait for it to actually
-    // disappear instead of assuming a fixed action closed it.
+    // Selecting an option doesn't reliably auto-close the panel; if it's still open when the
+    // next action clicks through, it can intercept that click.
     await this.page.keyboard.press('Escape');
-    await this.locators.relationToDeceasedFilterInput().waitFor({ state: 'hidden' });
   }
 
   async fillMobileNumber(mobileNumber: string) {
