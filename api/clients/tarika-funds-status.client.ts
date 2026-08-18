@@ -1,6 +1,6 @@
 import { APIRequestContext } from '@playwright/test';
 import { env } from '../../config/env';
-import { SeedResult, DivisionType } from '../../pages/seeder.page';
+import { SeedResult, DivisionType } from '../../pages/admin-pages/seeder.page';
 import { loggedPost } from './log-request';
 
 const AssetType = { BankAccount: 240, InvestmentAccount: 241 } as const;

@@ -1,13 +1,14 @@
 import { test, expect } from '../../fixtures/base.fixture';
 import { env } from '../../config/env';
-import { DataPreparation } from '../../steps/data-preparation';
-import { RequestsPage } from '../../pages/division-pages/requests.page';
+import { DataPreparation } from '../../steps/inheritance-seeder-data-preparation';
+import { DivisionRequestPage } from '../../pages/division-pages/division-request.page';
+import { MainMenuPage } from '../../pages/common-pages/main-menu.page';
 import { EstateInventoryPage } from '../../pages/division-pages/estate-inventory.page';
 import { EstateAssetCard } from '../../locators/ui-division-locators/estate-inventory.locators';
 
 // See specs/estate-inventory.md for the full area map this coverage is based on.
 test.describe('Estate inventory (حصر التركة)', () => {
-  test('shows queried asset cards, empty cards, header actions, and a post-inventory progress stepper @estate-inventory', async ({
+  test('shows queried asset cards, empty cards, header actions, and a post-inventory progress stepper @division @estate-inventory', async ({
     seederPage,
     request,
   }) => {
@@ -20,8 +21,8 @@ test.describe('Estate inventory (حصر التركة)', () => {
       const dataPreparation = new DataPreparation(seederPage, request);
       const { beneficiaryTab } = await dataPreparation.seedCase('cashBankInvestmentAccounts');
 
-      const requestsPage = new RequestsPage(beneficiaryTab);
-      await requestsPage.open();
+      await new MainMenuPage(beneficiaryTab).openMyOrders();
+      const requestsPage = new DivisionRequestPage(beneficiaryTab);
       await requestsPage.openCaseDetails();
 
       estateInventoryPage = new EstateInventoryPage(beneficiaryTab);

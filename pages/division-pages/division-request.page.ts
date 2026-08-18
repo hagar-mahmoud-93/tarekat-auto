@@ -1,13 +1,8 @@
 import { BasePage } from '../base.page';
-import { RequestsLocators } from '../../locators/ui-division-locators/requests.locators';
+import { DivisionRequestLocators } from '../../locators/ui-division-locators/division-request.locators';
 
-export class RequestsPage extends BasePage {
-  private readonly locators = new RequestsLocators(this.page);
-
-  async open() {
-    await this.locators.requestsNavLink().click();
-    await this.page.waitForLoadState('networkidle').catch(() => {});
-  }
+export class DivisionRequestPage extends BasePage {
+  private readonly locators = new DivisionRequestLocators(this.page);
 
   /** The request card whose "نوع الطلب" matches the given type, e.g. 'قسمة التركة'. */
   requestCard(requestType: string) {

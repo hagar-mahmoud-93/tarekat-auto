@@ -6,8 +6,8 @@ on:
     branches: [ main, master ]
   # Fired by other repos' pipelines (e.g. BE/FE) when their change touches an area we cover here,
   # so we catch regressions before they merge. client_payload.label maps to a @tag on the relevant
-  # suite (@cash-division, @investment-division, @division, @nafith-login, @profile, ...) — see
-  # tests/ for the full set. No label runs the full suite.
+  # suite (@cash-division, @investment-division, @division, @inheritance-request, @profile, ...) —
+  # see tests/ for the full set. No label runs the full suite.
   repository_dispatch:
     types: [run-tests]
   # Daily full-suite run at 4:18pm Riyadh time (UTC+3, no DST) = 13:18 UTC.
@@ -26,7 +26,7 @@ on:
           - full
           - crm
           - division
-          - nafith-login
+          - online-services
           - profile
 jobs:
   # Resolves which suite(s) to run from either trigger, once, so the three suite jobs below don't
@@ -47,8 +47,9 @@ jobs:
         fi
         echo "label=$LABEL" >> "$GITHUB_OUTPUT"
 
-  # Named per domain (crm / division / nafith-login / profile) so each shows as its own check in
-  # the PR/Actions UI and runs in parallel — they only share the `scope` dependency, not each other.
+  # Named per domain (crm / division / online-services / profile) so each shows as its own check
+  # in the PR/Actions UI and runs in parallel — they only share the `scope` dependency, not each
+  # other.
   crm:
     needs: scope
     if: ${{ needs.scope.outputs.label == 'full' || needs.scope.outputs.label == 'crm' }}
@@ -183,9 +184,11 @@ jobs:
           echo "flaky=$FLAKY"
         } >> "$GITHUB_OUTPUT"
 
-  nafith-login:
+  online-services:
     needs: scope
-    if: ${{ needs.scope.outputs.label == 'full' || needs.scope.outputs.label == 'nafith-login' }}
+    if: >-
+      ${{ needs.scope.outputs.label == 'full' || needs.scope.outputs.label == 'online-services' ||
+      needs.scope.outputs.label == 'inheritance-request' }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
     outputs:
@@ -218,11 +221,11 @@ jobs:
       if: steps.playwright-cache.outputs.cache-hit == 'true'
       run: npx playwright install-deps
     - name: Run Playwright tests
-      run: npx playwright test --grep "@nafith-login"
+      run: npx playwright test --grep "@inheritance-request"
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
-        name: allure-results-nafith-login
+        name: allure-results-online-services
         path: allure-results/
         retention-days: 30
     - name: Extract test summary
@@ -308,7 +311,7 @@ jobs:
   # Merges the results from all four domain jobs into a single Allure report (one history,
   # one set of trend graphs) instead of four independent per-domain reports.
   publish-report:
-    needs: [crm, division, nafith-login, profile]
+    needs: [crm, division, online-services, profile]
     # Runs even if a domain job didn't execute for this trigger's scope (skipped, not failed).
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
@@ -361,7 +364,7 @@ jobs:
   # notification path can be tested on demand — push/PR runs still skip it since those
   # already surface results in the Actions UI or PR checks in front of whoever triggered them.
   notify-slack:
-    needs: [crm, division, nafith-login, profile, publish-report]
+    needs: [crm, division, online-services, profile, publish-report]
     if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     steps:
@@ -370,7 +373,7 @@ jobs:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         CRM_RESULT: ${{ needs.crm.result }}
         DIVISION_RESULT: ${{ needs.division.result }}
-        NAFITH_RESULT: ${{ needs.nafith-login.result }}
+        ONLINE_SERVICES_RESULT: ${{ needs.online-services.result }}
         PROFILE_RESULT: ${{ needs.profile.result }}
         CRM_PASSED: ${{ needs.crm.outputs.passed }}
         CRM_FAILED: ${{ needs.crm.outputs.failed }}
@@ -380,10 +383,10 @@ jobs:
         DIVISION_FAILED: ${{ needs.division.outputs.failed }}
         DIVISION_SKIPPED: ${{ needs.division.outputs.skipped }}
         DIVISION_FLAKY: ${{ needs.division.outputs.flaky }}
-        NAFITH_PASSED: ${{ needs.nafith-login.outputs.passed }}
-        NAFITH_FAILED: ${{ needs.nafith-login.outputs.failed }}
-        NAFITH_SKIPPED: ${{ needs.nafith-login.outputs.skipped }}
-        NAFITH_FLAKY: ${{ needs.nafith-login.outputs.flaky }}
+        ONLINE_SERVICES_PASSED: ${{ needs.online-services.outputs.passed }}
+        ONLINE_SERVICES_FAILED: ${{ needs.online-services.outputs.failed }}
+        ONLINE_SERVICES_SKIPPED: ${{ needs.online-services.outputs.skipped }}
+        ONLINE_SERVICES_FLAKY: ${{ needs.online-services.outputs.flaky }}
         PROFILE_PASSED: ${{ needs.profile.outputs.passed }}
         PROFILE_FAILED: ${{ needs.profile.outputs.failed }}
         PROFILE_SKIPPED: ${{ needs.profile.outputs.skipped }}
@@ -392,10 +395,10 @@ jobs:
         REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
         RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       run: |
-        PASSED=$(( ${CRM_PASSED:-0} + ${DIVISION_PASSED:-0} + ${NAFITH_PASSED:-0} + ${PROFILE_PASSED:-0} ))
-        FAILED=$(( ${CRM_FAILED:-0} + ${DIVISION_FAILED:-0} + ${NAFITH_FAILED:-0} + ${PROFILE_FAILED:-0} ))
-        SKIPPED=$(( ${CRM_SKIPPED:-0} + ${DIVISION_SKIPPED:-0} + ${NAFITH_SKIPPED:-0} + ${PROFILE_SKIPPED:-0} ))
-        FLAKY=$(( ${CRM_FLAKY:-0} + ${DIVISION_FLAKY:-0} + ${NAFITH_FLAKY:-0} + ${PROFILE_FLAKY:-0} ))
+        PASSED=$(( ${CRM_PASSED:-0} + ${DIVISION_PASSED:-0} + ${ONLINE_SERVICES_PASSED:-0} + ${PROFILE_PASSED:-0} ))
+        FAILED=$(( ${CRM_FAILED:-0} + ${DIVISION_FAILED:-0} + ${ONLINE_SERVICES_FAILED:-0} + ${PROFILE_FAILED:-0} ))
+        SKIPPED=$(( ${CRM_SKIPPED:-0} + ${DIVISION_SKIPPED:-0} + ${ONLINE_SERVICES_SKIPPED:-0} + ${PROFILE_SKIPPED:-0} ))
+        FLAKY=$(( ${CRM_FLAKY:-0} + ${DIVISION_FLAKY:-0} + ${ONLINE_SERVICES_FLAKY:-0} + ${PROFILE_FLAKY:-0} ))
         RUN_AT=$(date -u '+%Y-%m-%d %H:%M UTC')
 
         # Slack renders these :shortcode: forms as native icons — maps each job's
@@ -411,11 +414,11 @@ jobs:
         }
         CRM_ICON=$(result_icon "$CRM_RESULT")
         DIVISION_ICON=$(result_icon "$DIVISION_RESULT")
-        NAFITH_ICON=$(result_icon "$NAFITH_RESULT")
+        ONLINE_SERVICES_ICON=$(result_icon "$ONLINE_SERVICES_RESULT")
         PROFILE_ICON=$(result_icon "$PROFILE_RESULT")
 
         HEADER_ICON=':white_check_mark:'
-        for r in "$CRM_RESULT" "$DIVISION_RESULT" "$NAFITH_RESULT" "$PROFILE_RESULT"; do
+        for r in "$CRM_RESULT" "$DIVISION_RESULT" "$ONLINE_SERVICES_RESULT" "$PROFILE_RESULT"; do
           if [ "$r" = "failure" ]; then HEADER_ICON=':x:'; fi
         done
 
@@ -424,7 +427,7 @@ jobs:
           --arg passed "$PASSED" --arg failed "$FAILED" --arg skipped "$SKIPPED" --arg flaky "$FLAKY" \
           --arg crm_icon "$CRM_ICON" --arg crm_result "$CRM_RESULT" \
           --arg division_icon "$DIVISION_ICON" --arg division_result "$DIVISION_RESULT" \
-          --arg nafith_icon "$NAFITH_ICON" --arg nafith_result "$NAFITH_RESULT" \
+          --arg online_services_icon "$ONLINE_SERVICES_ICON" --arg online_services_result "$ONLINE_SERVICES_RESULT" \
           --arg profile_icon "$PROFILE_ICON" --arg profile_result "$PROFILE_RESULT" \
           --arg report_url "$REPORT_URL" --arg run_url "$RUN_URL" \
           '{
@@ -439,7 +442,7 @@ jobs:
               { type: "section", text: { type: "mrkdwn", text: (
                   $crm_icon + " *CRM:* " + $crm_result + "\n" +
                   $division_icon + " *Division:* " + $division_result + "\n" +
-                  $nafith_icon + " *Nafith Login:* " + $nafith_result + "\n" +
+                  $online_services_icon + " *Online Services:* " + $online_services_result + "\n" +
                   $profile_icon + " *Profile:* " + $profile_result
               ) } },
               { type: "divider" },

@@ -1,6 +1,6 @@
 import { test, expect } from '../../fixtures/base.fixture';
 import { env } from '../../config/env';
-import { DataPreparation } from '../../steps/data-preparation';
+import { DataPreparation } from '../../steps/inheritance-seeder-data-preparation';
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
 import { HelpPage } from '../../pages/crm-pages/help.page';
 import { FaqPage } from '../../pages/crm-pages/faq.page';

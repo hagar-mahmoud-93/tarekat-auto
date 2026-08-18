@@ -88,22 +88,49 @@ export default defineConfig({
      * a divisionsFlows test is actually part of the run — see 'divisionsFlows' dependency below. */
     {
       name: 'division-preconditions',
-      testDir: './tests/divisionsFlows',
+      testDir: './tests/divisions-flows',
       testMatch: /.*\.setup\.ts/,
-      use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: !!process.env.CI },
+      use: {
+        ...devices['Desktop Chrome'],
+        channel: 'chrome',
+        headless: !!process.env.CI,
+        // Headless has no real window to maximize, so CI gets a fixed full-HD viewport instead of
+        // --start-maximized; toHaveScreenshot() baselines are recorded at this size to match.
+        ...(process.env.CI
+          ? { viewport: { width: 1920, height: 1080 } }
+          : { viewport: null, deviceScaleFactor: undefined, launchOptions: { args: ['--start-maximized'] } }),
+      },
     },
     {
       name: 'divisionsFlows',
-      testDir: './tests/divisionsFlows',
+      testDir: './tests/divisions-flows',
       testIgnore: /.*\.setup\.ts/,
       dependencies: ['division-preconditions'],
-      use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: !!process.env.CI },
+      use: {
+        ...devices['Desktop Chrome'],
+        channel: 'chrome',
+        headless: !!process.env.CI,
+        // Headless has no real window to maximize, so CI gets a fixed full-HD viewport instead of
+        // --start-maximized; toHaveScreenshot() baselines are recorded at this size to match.
+        ...(process.env.CI
+          ? { viewport: { width: 1920, height: 1080 } }
+          : { viewport: null, deviceScaleFactor: undefined, launchOptions: { args: ['--start-maximized'] } }),
+      },
     },
     {
       name: 'Google Chrome',
       testDir: './tests',
-      testIgnore: /divisionsFlows[\\/]/,
-      use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: !!process.env.CI },
+      testIgnore: /divisions-flows[\\/]/,
+      use: {
+        ...devices['Desktop Chrome'],
+        channel: 'chrome',
+        headless: !!process.env.CI,
+        // Headless has no real window to maximize, so CI gets a fixed full-HD viewport instead of
+        // --start-maximized; toHaveScreenshot() baselines are recorded at this size to match.
+        ...(process.env.CI
+          ? { viewport: { width: 1920, height: 1080 } }
+          : { viewport: null, deviceScaleFactor: undefined, launchOptions: { args: ['--start-maximized'] } }),
+      },
     },
   ],
 

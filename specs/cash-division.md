@@ -3,7 +3,7 @@
 Covers the "الأموال النقدية" division flow: beneficiary starts/accepts a proposed cash division,
 all other heirs approve, an admin auditor approves, Tarika (external funds system) reports
 account/balance status and settles the transfer, and the division completes. Existing coverage:
-`tests/divisionsFlows/cashDivision-BankAccounts.spec.ts`,
+`tests/divisions-flows/cashDivision-BankAccounts.spec.ts`,
 `cashDivision-BankAndInvestmentAccounts.spec.ts`, `cashDivision-InvestmentAccounts.spec.ts`
 (happy paths, one per asset-type combo), `cashDivision-TarikaFundsStatusFailure.spec.ts` /
 `cashDivision-InvestmentAccounts-TarikaFundsStatusFailure.spec.ts` (Tarika funds status reporting
@@ -14,7 +14,7 @@ doc to generate new cases along the same shape rather than re-deriving the flow 
 ## One-time environment precondition
 
 Division v2 flows need waffle flags on and mock services active. Run once per environment via
-`tests/divisionsFlows/division-preconditions.setup.ts`, which calls
+`tests/divisions-flows/division-preconditions.setup.ts`, which calls
 `steps/apply-division-preconditions.ts::applyDivisionPreconditions`:
 
 1. Admin Settings → disable value (toggle id 8).

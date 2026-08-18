@@ -1,11 +1,7 @@
 import { Page } from '@playwright/test';
 
-export class RequestsLocators {
+export class DivisionRequestLocators {
   constructor(private readonly page: Page) {}
-
-  requestsNavLink() {
-    return this.page.getByText('الطلبات').first();
-  }
 
   /** The request card whose "نوع الطلب" matches the given type, e.g. 'قسمة التركة'. */
   requestCard(requestType: string) {

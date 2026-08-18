@@ -1,5 +1,5 @@
 import { BasePage } from '../base.page';
-import { HelpLocators } from '../../locators/help-center.locators';
+import { HelpLocators } from '../../locators/crm-locators/help-center.locators';
 
 export class HelpPage extends BasePage {
   private readonly locators = new HelpLocators(this.page);

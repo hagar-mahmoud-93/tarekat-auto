@@ -1,14 +1,15 @@
 import { test, expect } from '../../fixtures/base.fixture';
 import { env } from '../../config/env';
 import { CashDivisionsPage } from '../../pages/division-pages/cash-divisions.page';
-import { DataPreparation } from '../../steps/data-preparation';
+import { DataPreparation } from '../../steps/inheritance-seeder-data-preparation';
 import { DivisionsList } from '../../steps/divisions-list';
 import { HeirAcceptance } from '../../steps/heir-acceptance';
 import { openDivisionDashboard } from '../../steps/open-division-dashboard';
 import { AuditorApprovalPage } from '../../pages/division-pages/auditor-approval.page';
 import { TarikaFundsStatusClient } from '../../api/clients/tarika-funds-status.client';
 import { fillMobileNumberIfPrompted } from '../../steps/fill-mobile-number';
-import { DivisionType } from '../../pages/seeder.page';
+import { DivisionType } from '../../pages/admin-pages/seeder.page';
+import { MainMenuPage } from '../../pages/common-pages/main-menu.page';
 
 // Full failure only (every deceased asset fails) across all three asset-mix seeds. Partial
 // failure (some assets in the same case fail, others succeed) isn't covered yet - see
@@ -63,7 +64,7 @@ test.describe('Inheritance seeder', () => {
       });
 
       await test.step('Verify request is awaiting heirs approval', async () => {
-        await requestsPage.open();
+        await new MainMenuPage(beneficiaryTab).openMyOrders();
         await expect(beneficiaryTab).toHaveURL(/\/my-orders/);
 
         await requestsPage.openCaseDetails();

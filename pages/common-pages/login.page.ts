@@ -1,5 +1,5 @@
-import { BasePage } from './base.page';
-import { LoginLocators } from '../locators/login.locators';
+import { BasePage } from '../base.page';
+import { LoginLocators } from '../../locators/common-locators/login.locators';
 
 export class LoginPage extends BasePage {
   private readonly locators = new LoginLocators(this.page);

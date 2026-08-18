@@ -1,6 +1,6 @@
-import { BasePage } from './base.page';
-import { env } from '../config/env';
-import { AdminLoginLocators } from '../locators/admin-dashboard-locators/admin-login.locators';
+import { BasePage } from '../base.page';
+import { env } from '../../config/env';
+import { AdminLoginLocators } from '../../locators/admin-dashboard-locators/admin-login.locators';
 
 export class AdminLoginPage extends BasePage {
   private readonly locators = new AdminLoginLocators(this.page);

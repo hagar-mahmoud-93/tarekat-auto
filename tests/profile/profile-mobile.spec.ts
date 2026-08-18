@@ -1,6 +1,6 @@
 import { test, expect } from '../../fixtures/base.fixture';
 import { env } from '../../config/env';
-import { DataPreparation } from '../../steps/data-preparation';
+import { DataPreparation } from '../../steps/inheritance-seeder-data-preparation';
 import { ProfileLocators } from '../../locators/profile.locators';
 
 test.describe('Profile - Mobile number', () => {

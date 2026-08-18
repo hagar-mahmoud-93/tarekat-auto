@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
-import { BasePage } from './base.page';
-import { env } from '../config/env';
-import { SeederLocators } from '../locators/admin-dashboard-locators/seeder.locators';
+import { BasePage } from '../base.page';
+import { env } from '../../config/env';
+import { SeederLocators } from '../../locators/admin-dashboard-locators/seeder.locators';
 
 export type AssetAccount = {
   iban: string;

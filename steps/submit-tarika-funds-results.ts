@@ -1,6 +1,6 @@
 import { APIRequestContext } from '@playwright/test';
 import { DivisionDashboardPage } from '../pages/division-pages/division-dashboard.page';
-import { SeedResult } from '../pages/seeder.page';
+import { SeedResult } from '../pages/admin-pages/seeder.page';
 import { TransferFundsResultClient } from '../api/clients/transfer-funds-result.client';
 
 export class SubmitTarikaFundsResults {

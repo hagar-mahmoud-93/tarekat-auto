@@ -35,3 +35,21 @@ export async function loggedPost(
 
   return response;
 }
+
+/** DELETEs via the given request context, logging the equivalent curl command and the response status/body. */
+export async function loggedDelete(
+  request: APIRequestContext,
+  label: string,
+  url: string,
+  options: { headers?: Record<string, string> },
+): Promise<APIResponse> {
+  console.log(`[${label}] Request:`, toCurl('DELETE', url, options.headers ?? {}));
+
+  const response = await request.delete(url, options);
+  const body = await response.text();
+
+  console.log(`[${label}] Response status:`, response.status());
+  console.log(`[${label}] Response body:`, body);
+
+  return response;
+}

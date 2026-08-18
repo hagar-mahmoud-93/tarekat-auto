@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test';
-import { SeederPage, SeedResult } from '../pages/seeder.page';
-import { RequestsPage } from '../pages/division-pages/requests.page';
+import { SeederPage, SeedResult } from '../pages/admin-pages/seeder.page';
+import { DivisionRequestPage } from '../pages/division-pages/division-request.page';
+import { MainMenuPage } from '../pages/common-pages/main-menu.page';
 import { CashDivisionsPage } from '../pages/division-pages/cash-divisions.page';
 import { fillMobileNumberIfPrompted } from './fill-mobile-number';
 
@@ -27,10 +28,10 @@ export class HeirAcceptance {
       const heirTab = await this.seederPage.loginAsUser(heir.identityNumber);
       //await fillMobileNumberIfPrompted(heirTab);
 
-      const requestsPage = new RequestsPage(heirTab);
-      await requestsPage.open();
-      await requestsPage.openCaseDetails();
-      await requestsPage.openDivisionsListingTab();
+      const divisionRequestPage = new DivisionRequestPage(heirTab);
+      await new MainMenuPage(heirTab).openMyOrders();
+      await divisionRequestPage.openCaseDetails();
+      await divisionRequestPage.openDivisionsListingTab();
 
       const divisionPage = new this.DivisionPage(heirTab);
       await divisionPage.viewDivision();

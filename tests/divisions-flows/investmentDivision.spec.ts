@@ -1,7 +1,8 @@
 import { test, expect } from '../../fixtures/base.fixture';
 import { env } from '../../config/env';
 import { InvestmentDivisionsPage } from '../../pages/division-pages/investment-divisions.page';
-import { DataPreparation } from '../../steps/data-preparation';
+import { MainMenuPage } from '../../pages/common-pages/main-menu.page';
+import { DataPreparation } from '../../steps/inheritance-seeder-data-preparation';
 import { DivisionsList } from '../../steps/divisions-list';
 import { HeirAcceptance } from '../../steps/heir-acceptance';
 import { openDivisionDashboard } from '../../steps/open-division-dashboard';
@@ -20,7 +21,7 @@ test.describe('Inheritance seeder', () => {
 
     let result: Awaited<ReturnType<DataPreparation['seedCase']>>['result'];
     let beneficiaryTab: Awaited<ReturnType<DataPreparation['seedCase']>>['beneficiaryTab'];
-    let requestsPage: Awaited<ReturnType<DivisionsList['run']>>;
+    let divisionRequestPage: Awaited<ReturnType<DivisionsList['run']>>;
     let investmentDivisionsPage: InvestmentDivisionsPage;
     let divisionId: string;
     let divisionDashboardPage: DivisionDashboardPage;
@@ -30,7 +31,7 @@ test.describe('Inheritance seeder', () => {
       ({ result, beneficiaryTab } = await dataPreparation.seedCase());
 
       const divisionsList = new DivisionsList(beneficiaryTab, result);
-      requestsPage = await divisionsList.run();
+      divisionRequestPage = await divisionsList.run();
 
       investmentDivisionsPage = new InvestmentDivisionsPage(beneficiaryTab);
     });
@@ -49,12 +50,12 @@ test.describe('Inheritance seeder', () => {
     });
 
     await test.step('Verify request is awaiting heirs approval', async () => {
-      await requestsPage.open();
+      await new MainMenuPage(beneficiaryTab).openMyOrders();
       await expect(beneficiaryTab).toHaveURL(/\/my-orders/);
 
-      await requestsPage.openCaseDetails();
+      await divisionRequestPage.openCaseDetails();
 
-      await requestsPage.openDivisionsListingTab();
+      await divisionRequestPage.openDivisionsListingTab();
       await expect(investmentDivisionsPage.requestStatus()).toContainText('بانتظار موافقة الورثة');
     });
 
@@ -63,11 +64,11 @@ test.describe('Inheritance seeder', () => {
       await heirAcceptance.run();
 
       await expect(async () => {
-        await requestsPage.openRequestDataTab();
-        //await expect(requestsPage.distributionStatus()).toContainText('في انتظار التدقيق', { timeout: 3000 });
+        await divisionRequestPage.openRequestDataTab();
+        //await expect(divisionRequestPage.distributionStatus()).toContainText('في انتظار التدقيق', { timeout: 3000 });
       }).toPass({ timeout: 60_000 });
 
-      await requestsPage.openDivisionsListingTab();
+      await divisionRequestPage.openDivisionsListingTab();
 
       await investmentDivisionsPage.viewDivision();
     });
