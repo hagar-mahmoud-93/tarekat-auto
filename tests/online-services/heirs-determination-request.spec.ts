@@ -163,6 +163,13 @@ test.describe('Inheritance request', () => {
     await test.step('Verify بيانات الشاهد الأول', async () => {
       const witnessDataPage = new WitnessDataPage(page);
       await witnessDataPage.verify();
+
+      // The witness الثاني sub-form mounts asynchronously once الأول's تحقق succeeds and
+      // collapses into a read-only summary card. CI has seen the next step's fields silently
+      // no-op when they're touched before this heading (and the fields under it) actually render.
+      // The default 5s expect() timeout isn't enough under CI load, where this transition can lag
+      // well behind the ~1s it normally takes - see the حفظ ومتابعة retry comment below.
+      await expect(page.getByText('بيانات الشاهد الثاني', { exact: true })).toBeVisible({ timeout: 20_000 });
     });
 
     await test.step('Fill بيانات الشاهد الثاني', async () => {

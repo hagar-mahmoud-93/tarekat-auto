@@ -13,11 +13,15 @@ export class WitnessDataPage extends BasePage {
    * Opens صلة قرابة الشاهد بالمورث and picks the first option in the list. The panel virtual-scrolls
    * ~90 options, but the first one is already rendered on open, so clicking it needs no scrolling.
    * Keyboard selection (ArrowDown+Enter) does not commit a value in this component, despite
-   * highlighting an option - it must be clicked.
+   * highlighting an option - it must be clicked. The virtual list keeps nudging its own scroll
+   * position (re-centering on the highlighted item as it re-renders), so a real mouse click - even
+   * forced - can miss: Playwright computes the click coordinates from the option's bounding box,
+   * which can go stale between that read and the event firing. Dispatch the click in-page instead,
+   * directly on the element, so it lands regardless of where the list has scrolled it to.
    */
   async selectAnyRelationToDeceased() {
     await this.locators.relationToDeceasedDropdown().click();
-    await this.locators.relationToDeceasedOptions().first().click();
+    await this.locators.relationToDeceasedOptions().first().evaluate((el: HTMLElement) => el.click());
 
     // Selecting an option doesn't reliably auto-close the panel, and Escape does nothing unless
     // focus is actually on the filter input - after clicking the option, focus is left elsewhere,
@@ -38,9 +42,11 @@ export class WitnessDataPage extends BasePage {
     await this.locators.idTypeDropdown().click();
     await this.locators.idTypeOption(ID_TYPE_BY_IDENTITY_TYPE[identityType]).click();
 
-    // Selecting an option doesn't reliably auto-close the panel; if it's still open when the
-    // next action clicks through, it can intercept that click.
+    // Selecting an option doesn't reliably auto-close the panel, and CI has seen it stay open
+    // long enough to intercept the next click. Confirm it actually disappears instead of assuming
+    // Escape closed it.
     await this.page.keyboard.press('Escape');
+    await this.locators.idTypeDropdownPanel().waitFor({ state: 'hidden' });
   }
 
   async fillIdNumber(idNumber: string) {
@@ -48,10 +54,12 @@ export class WitnessDataPage extends BasePage {
   }
 
   /** Filling opens the تاريخ الميلاد calendar popup, which stays open and can intercept later
-   *  clicks (e.g. تحقق) unless dismissed. */
+   *  clicks (e.g. تحقق) unless dismissed. Escape doesn't reliably close it under load either, so
+   *  confirm it actually disappears instead of assuming the keypress worked. */
   async fillBirthDateHijri(birthDateHijri: string) {
     await this.locators.birthDateInput().fill(birthDateHijri);
     await this.page.keyboard.press('Escape');
+    await this.locators.birthDateCalendarPanel().waitFor({ state: 'hidden' });
   }
 
   async verify() {
