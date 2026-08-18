@@ -1,8 +1,0 @@
-[
-  {
-    "method": "GET",
-    "url": "https://ops-merath.api.azm-dev.com/admin/inheritance/settings/8/change/?_changelist_filters=all%3D",
-    "status": 502,
-    "statusText": ""
-  }
-]
