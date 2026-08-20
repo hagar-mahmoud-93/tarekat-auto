@@ -1,0 +1,152 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: divisionsFlows/divisionBlockers.spec.ts >> Division blockers >> Investment division is blocked when a heir is dead @division @investment-division
+- Location: tests/divisionsFlows/divisionBlockers.spec.ts:104:7
+
+# Error details
+
+```
+Error: expect(locator).toContainText(expected) failed
+
+Locator: getByRole('dialog').filter({ has: getByRole('button', { name: 'العودة' }) })
+Expected substring: "نحيطكم بأنه لا يمكن القسمة الاتفاقية للتركة من خلال منصة التركات"
+Received string:    "{'dead_heirs': 'يوجد ورثة متوفين'}العودة"
+Timeout: 5000ms
+
+Call log:
+  - Expect "toContainText" with timeout 5000ms
+  - waiting for getByRole('dialog').filter({ has: getByRole('button', { name: 'العودة' }) })
+    3 × locator resolved to <div pv_id_13="" role="dialog" aria-modal="true" data-pc-name="dialog" data-pc-section="root" mr-org-fnt-size="16px" data-pd-focustrap="true" aria-labelledby="pv_id_10_header" class="p-dialog p-component p-ripple-disabled w-full mx-8 md:max-w-[35.25rem] md:mx-0 lg:min-w-[640px] p-dialog-enter-active p-dialog-enter-to mr-font-size">…</div>
+      - unexpected value "{'dead_heirs': 'يوجد ورثة متوفين'}العودة"
+    11 × locator resolved to <div pv_id_13="" role="dialog" aria-modal="true" data-pc-name="dialog" data-pc-section="root" mr-org-fnt-size="16px" data-pd-focustrap="true" aria-labelledby="pv_id_10_header" class="p-dialog p-component p-ripple-disabled w-full mx-8 md:max-w-[35.25rem] md:mx-0 lg:min-w-[640px] mr-font-size">…</div>
+       - unexpected value "{'dead_heirs': 'يوجد ورثة متوفين'}العودة"
+
+```
+
+```yaml
+- dialog:
+  - img
+  - heading [level=2]
+  - paragraph: "{'dead_heirs': 'يوجد ورثة متوفين'}"
+  - contentinfo:
+    - button "العودة"
+```
+
+# Test source
+
+```ts
+  31  |     await test.step('Beneficiary attempts to start the cash division and is blocked', async () => {
+  32  |       await cashDivisionsPage.showAssets();
+  33  |       await fillMobileNumberIfPrompted(beneficiaryTab);
+  34  |       await cashDivisionsPage.acceptDivisionAgreement();
+  35  |       await cashDivisionsPage.startDivision();
+  36  | 
+  37  |       await expect(cashDivisionsPage.blockerDialog()).toBeVisible();
+  38  |       await expect(cashDivisionsPage.blockerDialog()).toContainText('قاصر');
+  39  |     });
+  40  |   });
+  41  | 
+  42  |   test('Investment division is blocked when a heir is a minor @division @investment-division', async ({ seederPage, request }) => {
+  43  |     test.setTimeout(120_000);
+  44  |     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
+  45  | 
+  46  |     let result: Awaited<ReturnType<DataPreparation['seedCase']>>['result'];
+  47  |     let beneficiaryTab: Awaited<ReturnType<DataPreparation['seedCase']>>['beneficiaryTab'];
+  48  |     let investmentDivisionsPage: InvestmentDivisionsPage;
+  49  | 
+  50  |     await test.step('Seed a case with one minor heir and open the divisions listing', async () => {
+  51  |       const dataPreparation = new DataPreparation(seederPage, request);
+  52  |       ({ result, beneficiaryTab } = await dataPreparation.seedCase(undefined, { minorHeirIndex: 1 }));
+  53  | 
+  54  |       expect(result.json.heirs.some((heir) => heir.isMinor)).toBeTruthy();
+  55  | 
+  56  |       const divisionsList = new DivisionsList(beneficiaryTab, result);
+  57  |       await divisionsList.run();
+  58  | 
+  59  |       investmentDivisionsPage = new InvestmentDivisionsPage(beneficiaryTab);
+  60  |     });
+  61  | 
+  62  |     await test.step('Beneficiary attempts to start the investment division and is blocked', async () => {
+  63  |       await investmentDivisionsPage.showAssets();
+  64  |       await fillMobileNumberIfPrompted(beneficiaryTab);
+  65  |       await investmentDivisionsPage.acceptDivisionAgreement();
+  66  |       await investmentDivisionsPage.startDivision();
+  67  | 
+  68  |       await expect(investmentDivisionsPage.blockerDialog()).toBeVisible();
+  69  |       await expect(investmentDivisionsPage.blockerDialog()).toContainText('قاصر');
+  70  |     });
+  71  |   });
+  72  | 
+  73  |   test('Cash division is blocked when a heir is dead @division @cash-division', async ({ seederPage, request }) => {
+  74  |     test.setTimeout(120_000);
+  75  |     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
+  76  | 
+  77  |     let result: Awaited<ReturnType<DataPreparation['seedCase']>>['result'];
+  78  |     let beneficiaryTab: Awaited<ReturnType<DataPreparation['seedCase']>>['beneficiaryTab'];
+  79  |     let cashDivisionsPage: CashDivisionsPage;
+  80  | 
+  81  |     await test.step('Seed a case with one dead heir and open the divisions listing', async () => {
+  82  |       const dataPreparation = new DataPreparation(seederPage, request);
+  83  |       ({ result, beneficiaryTab } = await dataPreparation.seedCase(undefined, { deadHeirIndex: 1 }));
+  84  | 
+  85  |       expect(result.json.heirs.some((heir) => heir.isDead)).toBeTruthy();
+  86  | 
+  87  |       const divisionsList = new DivisionsList(beneficiaryTab, result);
+  88  |       await divisionsList.run();
+  89  | 
+  90  |       cashDivisionsPage = new CashDivisionsPage(beneficiaryTab);
+  91  |     });
+  92  | 
+  93  |     await test.step('Beneficiary attempts to start the cash division and is blocked', async () => {
+  94  |       await cashDivisionsPage.showAssets();
+  95  |       await fillMobileNumberIfPrompted(beneficiaryTab);
+  96  |       await cashDivisionsPage.acceptDivisionAgreement();
+  97  |       await cashDivisionsPage.startDivision();
+  98  | 
+  99  |       await expect(cashDivisionsPage.blockerDialog()).toBeVisible();
+  100 |       await expect(cashDivisionsPage.blockerDialog()).toContainText('يجب وجود حصر ورثة للوارث المتوفى');
+  101 |     });
+  102 |   });
+  103 | 
+  104 |   test('Investment division is blocked when a heir is dead @division @investment-division', async ({ seederPage, request }) => {
+  105 |     test.setTimeout(120_000);
+  106 |     test.skip(!env.admin.username || !env.admin.password, 'ADMIN_USERNAME/ADMIN_PASSWORD not set');
+  107 | 
+  108 |     let result: Awaited<ReturnType<DataPreparation['seedCase']>>['result'];
+  109 |     let beneficiaryTab: Awaited<ReturnType<DataPreparation['seedCase']>>['beneficiaryTab'];
+  110 |     let investmentDivisionsPage: InvestmentDivisionsPage;
+  111 | 
+  112 |     await test.step('Seed a case with one dead heir and open the divisions listing', async () => {
+  113 |       const dataPreparation = new DataPreparation(seederPage, request);
+  114 |       ({ result, beneficiaryTab } = await dataPreparation.seedCase(undefined, { deadHeirIndex: 1 }));
+  115 | 
+  116 |       expect(result.json.heirs.some((heir) => heir.isDead)).toBeTruthy();
+  117 | 
+  118 |       const divisionsList = new DivisionsList(beneficiaryTab, result);
+  119 |       await divisionsList.run();
+  120 | 
+  121 |       investmentDivisionsPage = new InvestmentDivisionsPage(beneficiaryTab);
+  122 |     });
+  123 | 
+  124 |     await test.step('Beneficiary attempts to start the investment division and is blocked', async () => {
+  125 |       await investmentDivisionsPage.showAssets();
+  126 |       await fillMobileNumberIfPrompted(beneficiaryTab);
+  127 |       await investmentDivisionsPage.acceptDivisionAgreement();
+  128 |       await investmentDivisionsPage.startDivision();
+  129 | 
+  130 |       await expect(investmentDivisionsPage.blockerDialog()).toBeVisible();
+> 131 |       await expect(investmentDivisionsPage.blockerDialog()).toContainText(
+      |                                                             ^ Error: expect(locator).toContainText(expected) failed
+  132 |         'نحيطكم بأنه لا يمكن القسمة الاتفاقية للتركة من خلال منصة التركات',
+  133 |       );
+  134 |     });
+  135 |   });
+  136 | });
+  137 | 
+```
