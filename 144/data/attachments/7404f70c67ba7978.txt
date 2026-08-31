@@ -1,0 +1,16 @@
+[Tawtheeq] Request: curl -X POST 'https://preprod-mocks.azm-dev.com/api/seeder/tawtheeq' -H 'accept: */*' -H 'content-type: application/json' -H 'origin: https://preprod-mocks.azm-dev.com' -H 'referer: https://preprod-mocks.azm-dev.com/' -H 'cookie: ***REDACTED***' -d '{"_name":"seed-1758856969","deceased":{"identityNumber":"1758856969","identityType":1,"firstName":"أحمد","middleName":"أحمد","lastName":"علي","familyName":"العمري","fullName":"أحمد أحمد علي العمري","gender":1,"nationalityId":1,"birthDate":"1967-12-29T00:00:00","birthDateHijri":"1387/09/28","deathDate":"2026-07-13T00:00:00","deathDateHijri":"1448/01/28","deathDocumentIssueDate":null,"deathDocumentIssueDateHijri":""},"beneficiary":{"identityNumber":"1146349513","identityType":1,"firstName":"ريم","middleName":"عمر","lastName":"علي","familyName":"العمري","fullName":"ريم عمر علي العمري","gender":2,"nationalityId":1,"birthDate":"1990-01-01T00:00:00","birthDateHijri":"1410/06/04","phoneNumber":"0585152377","relationshipTypeId":7,"relationshipType":"ابن","beneficiaryTypeId":1,"agencyTypeId":null},"heirs":[{"id":"1096dd49-f84d-416f-84c6-4cdbffe0eb45","identityNumber":"1651432216","identityType":1,"firstName":"عبدالرحمن","middleName":"محمد","lastName":"أحمد","familyName":"العمري","fullName":"عبدالرحمن محمد أحمد العمري","gender":1,"nationalityId":1,"birthDate":"2006-12-12T00:00:00","birthDateHijri":"1427/11/21","phoneNumber":"0517886360","relationshipTypeId":7,"relationshipType":"ابن","isMinor":false,"isAdult":true,"isDead":true,"isWifePregnant":null}],"request":{"id":4809,"requestNumber":"SEED-8fd74aa0"},"estateAssets":{"bankAccounts":[{"iban":"SA5967009084469713872799","accountNumber":"ACC67437124","balance":"50000.00"}],"investments":[{"accountNumber":"ACC86125334","balance":"50000.00"}]}}'
+[Tawtheeq] Response status: 502
+[Tawtheeq] Response body: <html>
+<head><title>502 Bad Gateway</title></head>
+<body>
+<center><h1>502 Bad Gateway</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+
