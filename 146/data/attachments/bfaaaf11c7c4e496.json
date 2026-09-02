@@ -1,0 +1,7 @@
+[
+  {
+    "method": "GET",
+    "url": "https://www.googletagmanager.com/gtm.js?id=GTM-XXXXXX",
+    "failure": "net::ERR_BLOCKED_BY_ORB"
+  }
+]
